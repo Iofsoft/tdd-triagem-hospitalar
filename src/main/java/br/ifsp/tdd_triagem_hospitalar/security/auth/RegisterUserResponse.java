@@ -1,4 +1,4 @@
-package br.ifsp.demo.security.auth;
+package br.ifsp.tdd_triagem_hospitalar.security.auth;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

@@ -1,6 +1,6 @@
-package br.ifsp.demo.security.auth;
+package br.ifsp.tdd_triagem_hospitalar.security.auth;
 
-import br.ifsp.demo.security.user.User;
+import br.ifsp.tdd_triagem_hospitalar.security.user.User;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 

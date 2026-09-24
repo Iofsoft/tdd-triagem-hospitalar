@@ -1,4 +1,4 @@
-package br.ifsp.demo;
+package br.ifsp.tdd_triagem_hospitalar;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

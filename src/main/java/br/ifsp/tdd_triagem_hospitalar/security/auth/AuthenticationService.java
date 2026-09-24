@@ -1,10 +1,10 @@
-package br.ifsp.demo.security.auth;
+package br.ifsp.tdd_triagem_hospitalar.security.auth;
 
-import br.ifsp.demo.exception.EntityAlreadyExistsException;
-import br.ifsp.demo.security.config.JwtService;
-import br.ifsp.demo.security.user.JpaUserRepository;
-import br.ifsp.demo.security.user.Role;
-import br.ifsp.demo.security.user.User;
+import br.ifsp.tdd_triagem_hospitalar.exception.EntityAlreadyExistsException;
+import br.ifsp.tdd_triagem_hospitalar.security.config.JwtService;
+import br.ifsp.tdd_triagem_hospitalar.security.user.JpaUserRepository;
+import br.ifsp.tdd_triagem_hospitalar.security.user.Role;
+import br.ifsp.tdd_triagem_hospitalar.security.user.User;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

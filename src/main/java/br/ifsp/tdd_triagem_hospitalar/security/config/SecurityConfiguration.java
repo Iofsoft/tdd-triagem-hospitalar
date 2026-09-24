@@ -1,4 +1,4 @@
-package br.ifsp.demo.security.config;
+package br.ifsp.tdd_triagem_hospitalar.security.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

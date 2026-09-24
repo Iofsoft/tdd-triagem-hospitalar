@@ -1,4 +1,4 @@
-package br.ifsp.demo.exception;
+package br.ifsp.tdd_triagem_hospitalar.exception;
 
 import lombok.Builder;
 import lombok.Getter;

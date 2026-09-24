@@ -1,6 +1,6 @@
-package br.ifsp.demo.controller;
+package br.ifsp.tdd_triagem_hospitalar.controller;
 
-import br.ifsp.demo.security.auth.AuthenticationInfoService;
+import br.ifsp.tdd_triagem_hospitalar.security.auth.AuthenticationInfoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
