@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>br.ifsp</groupId>
-    <artifactId>demo-auth-app</artifactId>
+    <artifactId>tdd-triagem-hospitalar</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>demo-auth-app</name>
-    <description>demo-auth-app</description>
+    <name>tdd-triagem-hospitalar</name>
+    <description>tdd-triagem-hospitalar</description>
     <url/>
     <licenses>
         <license/>
