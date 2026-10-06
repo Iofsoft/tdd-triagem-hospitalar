@@ -54,6 +54,10 @@ public class Atendimento {
         return List.copyOf(medicoes);
     }
 
+    public void iniciarConsulta() {
+        status = StatusAtendimento.EM_CONSULTA;
+    }
+
     @Override
     public int hashCode() { return Objects.hash(id); }
 
