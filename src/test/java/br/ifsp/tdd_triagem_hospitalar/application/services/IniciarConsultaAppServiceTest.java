@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @Tag("UnitTest")
@@ -37,5 +37,14 @@ class IniciarConsultaAppServiceTest {
 
         assertThat(atendimento.getStatus()).isEqualTo(StatusAtendimento.EM_CONSULTA);
         verify(atendimentoRepositoryMock, times(1)).salvar(atendimento);
+    }
+
+    @Test
+    @DisplayName("Should not start consultation before triage")
+    void shouldNotStartConsultationBeforeTriage() {
+        final Atendimento atendimento = new Atendimento(UUID.randomUUID(), new Cpf("52998224725"), StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of());
+        when(atendimentoRepositoryMock.buscarPorId(atendimento.getId())).thenReturn(Optional.of(atendimento));
+
+        assertThatIllegalStateException().isThrownBy(() -> sut.iniciarConsulta(atendimento.getId()));
     }
 }
