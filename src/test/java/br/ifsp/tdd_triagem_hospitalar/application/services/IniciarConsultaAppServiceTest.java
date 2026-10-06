@@ -47,4 +47,13 @@ class IniciarConsultaAppServiceTest {
 
         assertThatIllegalStateException().isThrownBy(() -> sut.iniciarConsulta(atendimento.getId()));
     }
+
+    @Test
+    @DisplayName("Should not start consultation already started")
+    void shouldNotStartConsultationAlreadyStarted() {
+        final Atendimento atendimento = new Atendimento(UUID.randomUUID(), new Cpf("52998224725"), StatusAtendimento.EM_CONSULTA, ClassificacaoRisco.VERDE, List.of());
+        when(atendimentoRepositoryMock.buscarPorId(atendimento.getId())).thenReturn(Optional.of(atendimento));
+
+        assertThatIllegalStateException().isThrownBy(() -> sut.iniciarConsulta(atendimento.getId()));
+    }
 }
