@@ -55,6 +55,9 @@ public class Atendimento {
     }
 
     public void iniciarConsulta() {
+        if (status != StatusAtendimento.AGUARDANDO_CONSULTA) {
+            throw new IllegalStateException("Consulta só pode ser iniciada quando o atendimento está aguardando consulta.");
+        }
         status = StatusAtendimento.EM_CONSULTA;
     }
 
