@@ -19,9 +19,12 @@ public class Atendimento {
         return prescricao;
     }
     public void registrarPrescricao(String prescricao) {
-        if (this.status != StatusAtendimento.EM_CONSULTA){
+        if (this.status != StatusAtendimento.EM_CONSULTA)
             throw new IllegalStateException("Não é possível prescrever fora de consulta");
-        }
+
+        if (prescricao == null || prescricao.isBlank())
+            throw new IllegalArgumentException("O texto da prescrição não pode ser vazio");
+
         this.prescricao = prescricao;
     }
 
