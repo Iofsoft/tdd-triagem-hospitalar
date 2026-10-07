@@ -61,6 +61,10 @@ public class Atendimento {
         status = StatusAtendimento.EM_CONSULTA;
     }
 
+    public void registrarMedicao(MedicaoSinaisVitais medicao) {
+        medicoes.add(medicao);
+    }
+
     @Override
     public int hashCode() { return Objects.hash(id); }
 
