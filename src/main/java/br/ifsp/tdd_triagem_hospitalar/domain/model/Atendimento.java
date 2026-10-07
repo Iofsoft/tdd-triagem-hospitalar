@@ -12,6 +12,21 @@ public class Atendimento {
     private StatusAtendimento status;
     private ClassificacaoRisco classificacaoRisco;
     private final List<MedicaoSinaisVitais> medicoes;
+    private String prescricao;
+
+
+    public String getPrescricao() {
+        return prescricao;
+    }
+    public void registrarPrescricao(String prescricao) {
+        if (this.status != StatusAtendimento.EM_CONSULTA)
+            throw new IllegalStateException("Não é possível prescrever fora de consulta");
+
+        if (prescricao == null || prescricao.isBlank())
+            throw new IllegalArgumentException("O texto da prescrição não pode ser vazio");
+
+        this.prescricao = prescricao;
+    }
 
     public Atendimento(UUID id, Cpf cpf, StatusAtendimento status, ClassificacaoRisco classificacaoRisco, List<MedicaoSinaisVitais> medicoes) {
         if (id == null) {
