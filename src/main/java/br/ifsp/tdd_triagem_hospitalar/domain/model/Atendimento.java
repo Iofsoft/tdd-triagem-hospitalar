@@ -62,6 +62,9 @@ public class Atendimento {
     }
 
     public void registrarMedicao(MedicaoSinaisVitais medicao) {
+        if (status == StatusAtendimento.FINALIZADO) {
+            throw new IllegalStateException("Não é possível registrar medição em atendimento finalizado.");
+        }
         medicoes.add(medicao);
     }
 
