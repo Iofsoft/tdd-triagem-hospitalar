@@ -56,4 +56,14 @@ class IniciarConsultaAppServiceTest {
 
         assertThatIllegalStateException().isThrownBy(() -> sut.iniciarConsulta(atendimento.getId()));
     }
+
+    @Test
+    @DisplayName("Should not start consultation of cancelled atendimento")
+    void shouldNotStartConsultationOfCancelledAtendimento() {
+        final Atendimento atendimento = new Atendimento(UUID.randomUUID(), new Cpf("52998224725"), StatusAtendimento.CANCELADO, null, List.of());
+        when(atendimentoRepositoryMock.buscarPorId(atendimento.getId())).thenReturn(Optional.of(atendimento));
+
+        assertThatIllegalStateException().isThrownBy(() -> sut.iniciarConsulta(atendimento.getId()));
+        assertThat(atendimento.getStatus()).isEqualTo(StatusAtendimento.CANCELADO);
+    }
 }
