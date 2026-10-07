@@ -42,4 +42,17 @@ class RegistrarReavaliacaoAppServiceTest {
         assertThat(atendimento.getMedicoes()).containsExactly(medicaoAnterior, novaMedicao);
         verify(atendimentoRepositoryMock, times(1)).salvar(atendimento);
     }
+
+    @Test
+    @DisplayName("Should add measurement and keep status when atendimento is in consultation")
+    void shouldAddMeasurementAndKeepStatusWhenAtendimentoIsInConsultation() {
+        final MedicaoSinaisVitais novaMedicao = new MedicaoSinaisVitais(UUID.randomUUID(), 38.2, 110, LocalDateTime.now());
+        final Atendimento atendimento = new Atendimento(UUID.randomUUID(), new Cpf("52998224725"), StatusAtendimento.EM_CONSULTA, ClassificacaoRisco.AMARELO, List.of());
+        when(atendimentoRepositoryMock.buscarPorId(atendimento.getId())).thenReturn(Optional.of(atendimento));
+
+        sut.registrarReavaliacao(atendimento.getId(), novaMedicao);
+
+        assertThat(atendimento.getMedicoes()).containsExactly(novaMedicao);
+        assertThat(atendimento.getStatus()).isEqualTo(StatusAtendimento.EM_CONSULTA);
+    }
 }
