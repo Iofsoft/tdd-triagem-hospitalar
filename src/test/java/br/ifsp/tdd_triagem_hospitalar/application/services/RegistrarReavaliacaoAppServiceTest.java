@@ -55,4 +55,14 @@ class RegistrarReavaliacaoAppServiceTest {
         assertThat(atendimento.getMedicoes()).containsExactly(novaMedicao);
         assertThat(atendimento.getStatus()).isEqualTo(StatusAtendimento.EM_CONSULTA);
     }
+
+    @Test
+    @DisplayName("Should not add measurement when atendimento is finished")
+    void shouldNotAddMeasurementWhenAtendimentoIsFinished() {
+        final MedicaoSinaisVitais novaMedicao = new MedicaoSinaisVitais(UUID.randomUUID(), 36.8, 85, LocalDateTime.now());
+        final Atendimento atendimento = new Atendimento(UUID.randomUUID(), new Cpf("52998224725"), StatusAtendimento.FINALIZADO, ClassificacaoRisco.VERDE, List.of());
+        when(atendimentoRepositoryMock.buscarPorId(atendimento.getId())).thenReturn(Optional.of(atendimento));
+
+        assertThatIllegalStateException().isThrownBy(() -> sut.registrarReavaliacao(atendimento.getId(), novaMedicao));
+    }
 }
