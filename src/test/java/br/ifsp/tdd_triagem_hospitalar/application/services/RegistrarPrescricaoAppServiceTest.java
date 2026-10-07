@@ -12,10 +12,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@Tag("UnitTest")
+@Tag("TDD")
 class RegistrarPrescricaoAppServiceTest {
 
     @Mock
@@ -26,8 +29,6 @@ class RegistrarPrescricaoAppServiceTest {
     private RegistrarPrescricaoAppService service;
 
     @Test
-    @Tag("UnitTest")
-    @Tag("TDD")
     void deveRegistrarPrescricaoValidaDuranteConsulta(){
         //UUID id, Cpf cpf, StatusAtendimento status, ClassificacaoRisco classificacaoRisco, List<MedicaoSinaisVitais> medicoes
         var idAtendimento = UUID.randomUUID();
@@ -48,5 +49,26 @@ class RegistrarPrescricaoAppServiceTest {
         assertThat(atendimento.getPrescricao()).isEqualTo(conduta);
 
         verify(repositoryMock).salvar(atendimento);
+    }
+
+    @Test
+    void naoDeveRegistrarPrescricaoForaDeConsulta(){
+        var idAtendimento = UUID.randomUUID();
+        var atendimento = new Atendimento(
+                idAtendimento,
+                new Cpf("52998224725"),
+                StatusAtendimento.AGUARDANDO_CONSULTA,
+                ClassificacaoRisco.VERDE,
+                null);
+
+        String conduta = "conduta genérica";
+
+        when(repositoryMock.buscarPorId(idAtendimento)).thenReturn(Optional.of(atendimento));
+
+        assertThatIllegalStateException().isThrownBy(()->
+                service.registrarPrescricao(idAtendimento,conduta));
+
+        verify(repositoryMock, never()).salvar(any(Atendimento.class));
+
     }
 }
