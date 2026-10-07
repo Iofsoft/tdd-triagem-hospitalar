@@ -11,8 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -69,6 +68,32 @@ class RegistrarPrescricaoAppServiceTest {
                 service.registrarPrescricao(idAtendimento,conduta));
 
         verify(repositoryMock, never()).salvar(any(Atendimento.class));
+    }
 
+    @Test
+    void naoDeveRegistrarPrescricaoComTextoVazio(){
+        var idAtendimento = UUID.randomUUID();
+        var atendimento = new Atendimento(
+                idAtendimento,
+                new Cpf("52998224725"),
+                StatusAtendimento.EM_CONSULTA,
+                ClassificacaoRisco.VERDE,
+                null);
+
+        when(repositoryMock.buscarPorId(idAtendimento)).thenReturn(Optional.of(atendimento));
+
+        assertThatIllegalArgumentException().isThrownBy(() ->{
+            service.registrarPrescricao(idAtendimento, "");
+        });
+
+        assertThatIllegalArgumentException().isThrownBy(() ->{
+            service.registrarPrescricao(idAtendimento, " ");
+        });
+
+        assertThatIllegalArgumentException().isThrownBy(() ->{
+            service.registrarPrescricao(idAtendimento, null);
+        });
+
+        verify(repositoryMock, never()).salvar(any(Atendimento.class));
     }
 }
