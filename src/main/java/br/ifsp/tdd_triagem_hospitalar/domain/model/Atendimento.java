@@ -68,6 +68,10 @@ public class Atendimento {
         medicoes.add(medicao);
     }
 
+    public void reclassificarRisco(ClassificacaoRisco novaClassificacao, String justificativa) {
+        classificacaoRisco = novaClassificacao;
+    }
+
     @Override
     public int hashCode() { return Objects.hash(id); }
 
