@@ -8,6 +8,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -37,5 +39,15 @@ class ReclassificarRiscoAppServiceTest {
 
         assertThat(atendimento.getClassificacaoRisco()).isEqualTo(ClassificacaoRisco.VERMELHO);
         verify(atendimentoRepositoryMock, times(1)).salvar(atendimento);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @DisplayName("Should not reclassify risk without justification")
+    void shouldNotReclassifyRiskWithoutJustification(String justificativa) {
+        final Atendimento atendimento = new Atendimento(UUID.randomUUID(), new Cpf("52998224725"), StatusAtendimento.AGUARDANDO_CONSULTA, ClassificacaoRisco.VERDE, List.of());
+        when(atendimentoRepositoryMock.buscarPorId(atendimento.getId())).thenReturn(Optional.of(atendimento));
+
+        assertThatIllegalArgumentException().isThrownBy(() -> sut.reclassificarRisco(atendimento.getId(), ClassificacaoRisco.VERMELHO, justificativa));
     }
 }
