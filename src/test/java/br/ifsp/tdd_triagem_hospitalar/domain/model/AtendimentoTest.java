@@ -18,8 +18,8 @@ class AtendimentoTest {
     private final Cpf cpf = new Cpf("52998224725");
 
     @Test
-    @DisplayName("Should create atendimento waiting for triage")
-    void shouldCreateAtendimentoWaitingForTriage() {
+    @DisplayName("Deve criar atendimento aguardando triagem")
+    void deveCriarAtendimentoAguardandoTriagem() {
         final Atendimento sut = new Atendimento(id, cpf, StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of());
 
         assertThat(sut.getStatus()).isEqualTo(StatusAtendimento.AGUARDANDO_TRIAGEM);
@@ -27,30 +27,30 @@ class AtendimentoTest {
     }
 
     @Test
-    @DisplayName("Should throw exception if id is null")
-    void shouldThrowExceptionIfIdIsNull() {
+    @DisplayName("Deve lançar exceção quando o id for nulo")
+    void deveLancarExcecaoQuandoIdForNulo() {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> new Atendimento(null, cpf, StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of()));
     }
 
     @Test
-    @DisplayName("Should throw exception if cpf is null")
-    void shouldThrowExceptionIfCpfIsNull() {
+    @DisplayName("Deve lançar exceção quando o CPF for nulo")
+    void deveLancarExcecaoQuandoCpfForNulo() {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> new Atendimento(id, null, StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of()));
     }
 
     @Test
-    @DisplayName("Should throw exception if status is null")
-    void shouldThrowExceptionIfStatusIsNull() {
+    @DisplayName("Deve lançar exceção quando o status for nulo")
+    void deveLancarExcecaoQuandoStatusForNulo() {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> new Atendimento(id, cpf, null, null, List.of()));
     }
 
     @ParameterizedTest
     @EnumSource(value = StatusAtendimento.class, names = {"AGUARDANDO_CONSULTA", "EM_CONSULTA", "FINALIZADO"})
-    @DisplayName("Should require risk classification after triage")
-    void shouldRequireRiskClassificationAfterTriage(StatusAtendimento status) {
+    @DisplayName("Deve exigir classificação de risco após a triagem")
+    void deveExigirClassificacaoDeRiscoAposTriagem(StatusAtendimento status) {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> new Atendimento(id, cpf, status, null, List.of()));
     }

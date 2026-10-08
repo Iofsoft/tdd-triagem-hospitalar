@@ -18,8 +18,8 @@ class AtendimentoFunctionalTest {
     private final Cpf cpf = new Cpf("52998224725");
 
     @Test
-    @DisplayName("Should start consultation when status is waiting for consultation")
-    void shouldStartConsultationWhenStatusIsWaitingForConsultation() {
+    @DisplayName("Deve iniciar consulta quando o status for aguardando consulta")
+    void deveIniciarConsultaQuandoStatusForAguardandoConsulta() {
         final Atendimento sut = new Atendimento(id, cpf, StatusAtendimento.AGUARDANDO_CONSULTA, ClassificacaoRisco.VERDE, List.of());
 
         sut.iniciarConsulta();
@@ -29,8 +29,8 @@ class AtendimentoFunctionalTest {
 
     @ParameterizedTest
     @EnumSource(value = StatusAtendimento.class, mode = EnumSource.Mode.EXCLUDE, names = {"AGUARDANDO_CONSULTA"})
-    @DisplayName("Should not start consultation when status is not waiting for consultation")
-    void shouldNotStartConsultationWhenStatusIsNotWaitingForConsultation(StatusAtendimento status) {
+    @DisplayName("Não deve iniciar consulta quando o status não for aguardando consulta")
+    void naoDeveIniciarConsultaQuandoStatusNaoForAguardandoConsulta(StatusAtendimento status) {
         final Atendimento sut = new Atendimento(id, cpf, status, ClassificacaoRisco.VERDE, List.of());
 
         assertThatIllegalStateException().isThrownBy(sut::iniciarConsulta);

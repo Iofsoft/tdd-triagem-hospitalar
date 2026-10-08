@@ -30,8 +30,8 @@ class ReclassificarRiscoAppServiceTest {
     @InjectMocks ReclassificarRiscoAppService sut;
 
     @Test
-    @DisplayName("Should reclassify risk from green to red with justification")
-    void shouldReclassifyRiskFromGreenToRedWithJustification() {
+    @DisplayName("Deve reclassificar risco de verde para vermelho com justificativa")
+    void deveReclassificarRiscoDeVerdeParaVermelhoComJustificativa() {
         final Atendimento atendimento = new Atendimento(UUID.randomUUID(), new Cpf("52998224725"), StatusAtendimento.AGUARDANDO_CONSULTA, ClassificacaoRisco.VERDE, List.of());
         when(atendimentoRepositoryMock.buscarPorId(atendimento.getId())).thenReturn(Optional.of(atendimento));
 
@@ -43,8 +43,8 @@ class ReclassificarRiscoAppServiceTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @DisplayName("Should not reclassify risk without justification")
-    void shouldNotReclassifyRiskWithoutJustification(String justificativa) {
+    @DisplayName("Não deve reclassificar risco sem justificativa")
+    void naoDeveReclassificarRiscoSemJustificativa(String justificativa) {
         final Atendimento atendimento = new Atendimento(UUID.randomUUID(), new Cpf("52998224725"), StatusAtendimento.AGUARDANDO_CONSULTA, ClassificacaoRisco.VERDE, List.of());
         when(atendimentoRepositoryMock.buscarPorId(atendimento.getId())).thenReturn(Optional.of(atendimento));
 
