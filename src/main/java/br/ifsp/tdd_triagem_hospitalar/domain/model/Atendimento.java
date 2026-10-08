@@ -87,6 +87,10 @@ public class Atendimento {
         classificacaoRisco = novaClassificacao;
     }
 
+    public void finalizarAtendimento(){
+        this.status = StatusAtendimento.FINALIZADO;
+    }
+
     @Override
     public int hashCode() { return Objects.hash(id); }
 
