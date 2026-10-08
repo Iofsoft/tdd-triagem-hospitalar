@@ -35,4 +35,6 @@ class AbrirAtendimentoAppServiceTest {
 
         verifyNoInteractions(atendimentoRepository);
     }
+
+    // Fiquei com dúvida, esse teste me fez ficar pensando se ele tem utilidade, porque a classe cpf já foi testada né
 }
