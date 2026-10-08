@@ -15,10 +15,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @Tag("UnitTest")
 @Tag("TDD")
@@ -51,6 +50,24 @@ class FinalizarAtendimentoAppServiceTest {
         assertThat(atendimento.getStatus()).isEqualTo(StatusAtendimento.FINALIZADO);
 
         verify(repositoryMock).salvar(atendimento);
-
     }
+
+    @Test
+    void naoDeveFinalizarAtendimentoComPrescricaoPrevia() {
+        var idAtendimento = UUID.randomUUID();
+        var atendimento = new Atendimento(
+                idAtendimento,
+                new Cpf("52998224725"),
+                StatusAtendimento.EM_CONSULTA,
+                ClassificacaoRisco.VERDE,
+                List.of()
+        );
+
+        when(repositoryMock.buscarPorId(idAtendimento)).thenReturn(Optional.of(atendimento));
+        assertThatIllegalStateException().isThrownBy(()-> {
+            service.finalizarAtendimento(idAtendimento);
+        });
+        verify(repositoryMock, never()).salvar(any(Atendimento.class));
+    }
+
 }
