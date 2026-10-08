@@ -88,6 +88,9 @@ public class Atendimento {
     }
 
     public void finalizarAtendimento(){
+        if (this.prescricao == null || this.prescricao.isBlank())
+            throw new IllegalStateException("Atendimento não pode ser finalizado sem prescrição");
+
         this.status = StatusAtendimento.FINALIZADO;
     }
 
