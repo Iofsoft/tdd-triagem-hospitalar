@@ -84,6 +84,9 @@ public class Atendimento {
     }
 
     public void reclassificarRisco(ClassificacaoRisco novaClassificacao, String justificativa) {
+        if (justificativa == null || justificativa.isBlank()) {
+            throw new IllegalArgumentException("A justificativa da reclassificação não pode ser vazia.");
+        }
         classificacaoRisco = novaClassificacao;
     }
 
