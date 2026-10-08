@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,5 +35,28 @@ class AtendimentoFunctionalTest {
         final Atendimento sut = new Atendimento(id, cpf, status, ClassificacaoRisco.VERDE, List.of());
 
         assertThatIllegalStateException().isThrownBy(sut::iniciarConsulta);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = StatusAtendimento.class, names = {"AGUARDANDO_TRIAGEM", "AGUARDANDO_CONSULTA", "EM_CONSULTA"})
+    @DisplayName("Deve registrar medição sem alterar o status quando o atendimento estiver em aberto")
+    void deveRegistrarMedicaoQuandoAtendimentoEstiverEmAberto(StatusAtendimento status) {
+        final Atendimento sut = new Atendimento(id, cpf, status, ClassificacaoRisco.VERDE, List.of());
+        final MedicaoSinaisVitais medicao = new MedicaoSinaisVitais(UUID.randomUUID(), 37.5, 90, LocalDateTime.now());
+
+        sut.registrarMedicao(medicao);
+
+        assertThat(sut.getMedicoes()).containsExactly(medicao);
+        assertThat(sut.getStatus()).isEqualTo(status);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = StatusAtendimento.class, names = {"FINALIZADO", "CANCELADO"})
+    @DisplayName("Não deve registrar medição quando o atendimento estiver encerrado")
+    void naoDeveRegistrarMedicaoQuandoAtendimentoEstiverEncerrado(StatusAtendimento status) {
+        final Atendimento sut = new Atendimento(id, cpf, status, ClassificacaoRisco.VERDE, List.of());
+        final MedicaoSinaisVitais medicao = new MedicaoSinaisVitais(UUID.randomUUID(), 37.5, 90, LocalDateTime.now());
+
+        assertThatIllegalStateException().isThrownBy(() -> sut.registrarMedicao(medicao));
     }
 }
