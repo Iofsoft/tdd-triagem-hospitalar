@@ -1,7 +1,6 @@
 package br.ifsp.tdd_triagem_hospitalar.application.services;
 
-import br.ifsp.tdd_triagem_hospitalar.domain.model.ClassificacaoRisco;
-import br.ifsp.tdd_triagem_hospitalar.domain.model.MedicaoSinaisVitais;
+import br.ifsp.tdd_triagem_hospitalar.domain.model.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -11,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -49,7 +49,6 @@ class RealizarTriagemAppServiceTest {
     @Test
     @DisplayName("Deve falhar ao criar medição com temperatura fora dos limites fisiológicos")
     void deveFalharParaTemperaturaForaDosLimites() {
-        UUID atendimentoId = UUID.randomUUID();
         double temperaturaInvalida = 0.0;
         int frequenciaCardiaca = 80;
 
@@ -63,12 +62,33 @@ class RealizarTriagemAppServiceTest {
     @Test
     @DisplayName("Deve falhar ao criar medição com frequência cardíaca fora dos limites fisiológicos")
     void deveFalharParaFrequenciaCardiacaForaDosLimites() {
-        UUID atendimentoId = UUID.randomUUID();
         double temperatura = 36.5;
         int frequenciaCardiacaInvalida = -10;
 
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> new MedicaoSinaisVitais(UUID.randomUUID(), temperatura, frequenciaCardiacaInvalida, LocalDateTime.now()));
+
+        verify(atendimentoRepository, never()).salvar(any());
+    }
+
+    @Test
+    @DisplayName("Deve falhar ao tentar realizar triagem sem classificação de risco")
+    void deveFalharQuandoClassificacaoRiscoForNula() {
+        UUID atendimentoId = UUID.randomUUID();
+        Atendimento atendimento = new Atendimento(
+                atendimentoId,
+                new Cpf("52998224725"),
+                StatusAtendimento.AGUARDANDO_TRIAGEM,
+                null,
+                List.of()
+        );
+        MedicaoSinaisVitais medicao = new MedicaoSinaisVitais(UUID.randomUUID(), 36.5, 80, LocalDateTime.now());
+
+        when(atendimentoRepository.buscarPorId(atendimentoId)).thenReturn(Optional.of(atendimento));
+
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> sut.realizarTriagem(atendimentoId, medicao, null))
+                .withMessage("A classificação de risco é obrigatória para a triagem.");
 
         verify(atendimentoRepository, never()).salvar(any());
     }
