@@ -84,6 +84,9 @@ public class Atendimento {
     }
 
     public void reclassificarRisco(ClassificacaoRisco novaClassificacao, String justificativa) {
+        if (status == StatusAtendimento.FINALIZADO || status == StatusAtendimento.CANCELADO) {
+            throw new IllegalStateException("Não é possível reclassificar o risco de atendimento finalizado ou cancelado.");
+        }
         if (justificativa == null || justificativa.isBlank()) {
             throw new IllegalArgumentException("A justificativa da reclassificação não pode ser vazia.");
         }
