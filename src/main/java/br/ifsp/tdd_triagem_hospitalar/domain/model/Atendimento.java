@@ -49,6 +49,12 @@ public class Atendimento {
         this.medicoes = medicoes == null ? new ArrayList<>() : new ArrayList<>(medicoes);
     }
 
+    public Atendimento(UUID id, Cpf cpf, StatusAtendimento status, ClassificacaoRisco classificacaoRisco,
+                       List<MedicaoSinaisVitais> medicoes, String prescricao) {
+        this(id, cpf, status, classificacaoRisco, medicoes); // chama o construtor normal
+        this.prescricao = prescricao; // adiciona a prescrição
+    }
+
     public UUID getId() {
         return id;
     }
