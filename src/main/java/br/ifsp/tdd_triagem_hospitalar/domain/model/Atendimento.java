@@ -88,6 +88,10 @@ public class Atendimento {
     }
 
     public void finalizarAtendimento(){
+
+        if (this.status != StatusAtendimento.EM_CONSULTA)
+            throw new IllegalStateException("Atendimento deve possuir status EmConsulta para ser finalizado");
+
         if (this.prescricao == null || this.prescricao.isBlank())
             throw new IllegalStateException("Atendimento não pode ser finalizado sem prescrição");
 
