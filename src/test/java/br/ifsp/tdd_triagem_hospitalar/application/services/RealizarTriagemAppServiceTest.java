@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -41,6 +42,33 @@ class RealizarTriagemAppServiceTest {
         assertThatThrownBy(() -> sut.realizarTriagem(idInexistente, medicao, risco))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Atendimento não encontrado");
+
+        verify(atendimentoRepository, never()).salvar(any());
+    }
+
+    @Test
+    @DisplayName("Deve falhar ao criar medição com temperatura fora dos limites fisiológicos")
+    void deveFalharParaTemperaturaForaDosLimites() {
+        UUID atendimentoId = UUID.randomUUID();
+        double temperaturaInvalida = 0.0;
+        int frequenciaCardiaca = 80;
+
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> new MedicaoSinaisVitais(UUID.randomUUID(), temperaturaInvalida, frequenciaCardiaca, LocalDateTime.now()));
+
+        verify(atendimentoRepository, never()).salvar(any());
+    }
+
+
+    @Test
+    @DisplayName("Deve falhar ao criar medição com frequência cardíaca fora dos limites fisiológicos")
+    void deveFalharParaFrequenciaCardiacaForaDosLimites() {
+        UUID atendimentoId = UUID.randomUUID();
+        double temperatura = 36.5;
+        int frequenciaCardiacaInvalida = -10;
+
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> new MedicaoSinaisVitais(UUID.randomUUID(), temperatura, frequenciaCardiacaInvalida, LocalDateTime.now()));
 
         verify(atendimentoRepository, never()).salvar(any());
     }
