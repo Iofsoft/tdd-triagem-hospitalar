@@ -27,12 +27,13 @@ public class JdbcAtendimentoRepository implements AtendimentoRepository {
     public void salvar(Atendimento atendimento) {
         final String classificacaoRisco = atendimento.getClassificacaoRisco() == null ? null : atendimento.getClassificacaoRisco().name();
 
-        jdbcTemplate.update("INSERT OR REPLACE INTO atendimento (id, cpf, status, classificacao_risco, prescricao) VALUES (?, ?, ?, ?, ?)",
+        jdbcTemplate.update("INSERT OR REPLACE INTO atendimento (id, cpf, status, classificacao_risco, prescricao, motivo_cancelamento) VALUES (?, ?, ?, ?, ?, ?)",
                 atendimento.getId().toString(),
                 atendimento.getCpf().valor(),
                 atendimento.getStatus().name(),
                 classificacaoRisco,
-                atendimento.getPrescricao());
+                atendimento.getPrescricao(),
+                atendimento.getMotivoCancelamento());
 
         for (MedicaoSinaisVitais medicao : atendimento.getMedicoes()) {
             jdbcTemplate.update("INSERT OR REPLACE INTO medicao (id, atendimento_id, temperatura, frequencia_cardiaca, data_hora) VALUES (?, ?, ?, ?, ?)",
@@ -61,9 +62,19 @@ public class JdbcAtendimentoRepository implements AtendimentoRepository {
                         StatusAtendimento.valueOf(rs.getString("status")),
                         rs.getString("classificacao_risco") == null ? null : ClassificacaoRisco.valueOf(rs.getString("classificacao_risco")),
                         medicoes,
-                        rs.getString("prescricao")),
+                        rs.getString("prescricao"),
+                        rs.getString("motivo_cancelamento")),
                 id.toString());
 
         return atendimentos.stream().findFirst();
+    }
+
+    @Override
+    public boolean existeAtendimentoAtivoPorCpf(Cpf cpf) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM atendimento where cpf = ? AND status NOT IN ('FINALIZADO', 'CANCELADO')",
+                Integer.class,
+                cpf.valor());
+        return count != null && count > 0;
     }
 }

@@ -13,6 +13,12 @@ public class Atendimento {
     private ClassificacaoRisco classificacaoRisco;
     private final List<MedicaoSinaisVitais> medicoes;
     private String prescricao;
+    private String motivoCancelamento;
+
+
+    public String getMotivoCancelamento() {
+        return motivoCancelamento;
+    }
 
 
     public String getPrescricao() {
@@ -50,9 +56,10 @@ public class Atendimento {
     }
 
     public Atendimento(UUID id, Cpf cpf, StatusAtendimento status, ClassificacaoRisco classificacaoRisco,
-                       List<MedicaoSinaisVitais> medicoes, String prescricao) {
-        this(id, cpf, status, classificacaoRisco, medicoes); // chama o construtor normal
-        this.prescricao = prescricao; // adiciona a prescrição
+                       List<MedicaoSinaisVitais> medicoes, String prescricao, String motivoCancelamento) {
+        this(id, cpf, status, classificacaoRisco, medicoes);
+        this.prescricao = prescricao;
+        this.motivoCancelamento = motivoCancelamento;
     }
 
     public UUID getId() {
@@ -108,6 +115,18 @@ public class Atendimento {
             throw new IllegalStateException("Atendimento não pode ser finalizado sem prescrição");
 
         this.status = StatusAtendimento.FINALIZADO;
+    }
+
+    public void cancelarAtendimento(String motivoCancelamento){
+        if ((this.status == StatusAtendimento.CANCELADO) || (this.status == StatusAtendimento.FINALIZADO)){
+            throw new IllegalStateException("Atendimentos já cancelados ou finalizados não podem ser cancelados");
+        }
+
+        if (motivoCancelamento == null || motivoCancelamento.isBlank())
+            throw new IllegalArgumentException("Motivo do cancelamento não pode ser vazio ou nulo");
+
+        this.status = StatusAtendimento.CANCELADO;
+        this.motivoCancelamento = motivoCancelamento;
     }
 
     @Override
