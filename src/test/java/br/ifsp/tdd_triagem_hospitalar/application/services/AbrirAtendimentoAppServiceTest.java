@@ -1,5 +1,7 @@
 package br.ifsp.tdd_triagem_hospitalar.application.services;
 
+import br.ifsp.tdd_triagem_hospitalar.domain.model.Atendimento;
+import br.ifsp.tdd_triagem_hospitalar.domain.model.Cpf;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -12,7 +14,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-import static org.mockito.Mockito.verifyNoInteractions;
+import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
+import static org.mockito.Mockito.*;
 
 @Tag("UnitTest")
 @Tag("TDD")
@@ -35,6 +38,18 @@ class AbrirAtendimentoAppServiceTest {
 
         verifyNoInteractions(atendimentoRepository);
     }
-
     // Fiquei com dúvida, esse teste me fez ficar pensando se ele tem utilidade, porque a classe cpf já foi testada né
+
+    @Test
+    @DisplayName("Não deve abrir atendimento se o paciente já possui atendimento ativo")
+    void naoDeveAbrirAtendimentoSeJaPossuiAtendimentoAtivo() {
+        String cpfValido = "52998224725";
+        when(atendimentoRepository.existeAtendimentoAtivoPorCpf(any(Cpf.class))).thenReturn(true);
+
+        assertThatIllegalStateException()
+                .isThrownBy(() -> sut.abrirAtendimento(cpfValido))
+                .withMessage("Paciente já possui atendimento ativo.");
+
+        verify(atendimentoRepository, never()).salvar(any(Atendimento.class));
+    }
 }
