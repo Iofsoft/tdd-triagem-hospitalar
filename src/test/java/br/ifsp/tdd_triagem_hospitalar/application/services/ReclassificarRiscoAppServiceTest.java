@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -49,5 +50,15 @@ class ReclassificarRiscoAppServiceTest {
         when(atendimentoRepositoryMock.buscarPorId(atendimento.getId())).thenReturn(Optional.of(atendimento));
 
         assertThatIllegalArgumentException().isThrownBy(() -> sut.reclassificarRisco(atendimento.getId(), ClassificacaoRisco.VERMELHO, justificativa));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = StatusAtendimento.class, names = {"FINALIZADO", "CANCELADO"})
+    @DisplayName("Não deve reclassificar risco de atendimento finalizado ou cancelado")
+    void naoDeveReclassificarRiscoDeAtendimentoFinalizadoOuCancelado(StatusAtendimento status) {
+        final Atendimento atendimento = new Atendimento(UUID.randomUUID(), new Cpf("52998224725"), status, ClassificacaoRisco.VERDE, List.of());
+        when(atendimentoRepositoryMock.buscarPorId(atendimento.getId())).thenReturn(Optional.of(atendimento));
+
+        assertThatIllegalStateException().isThrownBy(() -> sut.reclassificarRisco(atendimento.getId(), ClassificacaoRisco.VERMELHO, "Paciente com piora na saturação"));
     }
 }
