@@ -103,8 +103,16 @@ public class Atendimento {
         if (this.status != StatusAtendimento.AGUARDANDO_TRIAGEM) {
             throw new IllegalStateException("Triagem só pode ser realizada quando o atendimento está aguardando triagem.");
         }
+
         if (risco == null) {
             throw new IllegalArgumentException("A classificação de risco é obrigatória para a triagem.");
+        }
+
+        this.classificacaoRisco = risco;
+        this.status = StatusAtendimento.AGUARDANDO_CONSULTA;
+
+        if (medicao != null) {
+            this.medicoes.add(medicao);
         }
     }
 

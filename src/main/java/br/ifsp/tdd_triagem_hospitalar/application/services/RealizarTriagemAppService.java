@@ -19,5 +19,6 @@ public class RealizarTriagemAppService {
                 .orElseThrow(() -> new IllegalArgumentException("Atendimento não encontrado"));
 
         atendimento.realizarTriagem(medicao, risco);
+        atendimentoRepository.salvar(atendimento);
     }
 }
