@@ -16,9 +16,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @Tag("UnitTest")
@@ -49,5 +49,25 @@ class CancelarAtendimentoAppServiceTest {
         assertThat(atendimento.getStatus()).isEqualTo(StatusAtendimento.CANCELADO);
         assertThat(atendimento.getMotivoCancelamento()).isEqualTo(motivo);
         verify(repositoryMock).salvar(atendimento);
+    }
+
+    @Test
+    void naoDeveCancelarAtendimentoJaFinalizado() {
+        var idAtendimento = UUID.randomUUID();
+        var atendimento = new Atendimento(
+                idAtendimento,
+                new Cpf("52998224725"),
+                StatusAtendimento.FINALIZADO,
+                ClassificacaoRisco.VERDE,
+                List.of()
+        );
+
+        when(repositoryMock.buscarPorId(idAtendimento)).thenReturn(Optional.of(atendimento));
+
+        assertThatIllegalStateException().isThrownBy(() -> {
+            service.cancelarAtendimento(idAtendimento, "Desistência");
+        });
+
+        verify(repositoryMock, never()).salvar(any(Atendimento.class));
     }
 }
