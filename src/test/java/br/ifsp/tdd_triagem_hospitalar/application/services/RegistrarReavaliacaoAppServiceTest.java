@@ -30,8 +30,8 @@ class RegistrarReavaliacaoAppServiceTest {
     @InjectMocks RegistrarReavaliacaoAppService sut;
 
     @Test
-    @DisplayName("Should add measurement when atendimento is waiting for consultation")
-    void shouldAddMeasurementWhenAtendimentoIsWaitingForConsultation() {
+    @DisplayName("Deve adicionar medição quando o atendimento estiver aguardando consulta")
+    void deveAdicionarMedicaoQuandoAtendimentoEstiverAguardandoConsulta() {
         final MedicaoSinaisVitais medicaoAnterior = new MedicaoSinaisVitais(UUID.randomUUID(), 36.5, 80, LocalDateTime.now().minusHours(1));
         final MedicaoSinaisVitais novaMedicao = new MedicaoSinaisVitais(UUID.randomUUID(), 37.8, 95, LocalDateTime.now());
         final Atendimento atendimento = new Atendimento(UUID.randomUUID(), new Cpf("52998224725"), StatusAtendimento.AGUARDANDO_CONSULTA, ClassificacaoRisco.VERDE, List.of(medicaoAnterior));
@@ -44,8 +44,8 @@ class RegistrarReavaliacaoAppServiceTest {
     }
 
     @Test
-    @DisplayName("Should add measurement and keep status when atendimento is in consultation")
-    void shouldAddMeasurementAndKeepStatusWhenAtendimentoIsInConsultation() {
+    @DisplayName("Deve adicionar medição e manter o status quando o atendimento estiver em consulta")
+    void deveAdicionarMedicaoEManterStatusQuandoAtendimentoEstiverEmConsulta() {
         final MedicaoSinaisVitais novaMedicao = new MedicaoSinaisVitais(UUID.randomUUID(), 38.2, 110, LocalDateTime.now());
         final Atendimento atendimento = new Atendimento(UUID.randomUUID(), new Cpf("52998224725"), StatusAtendimento.EM_CONSULTA, ClassificacaoRisco.AMARELO, List.of());
         when(atendimentoRepositoryMock.buscarPorId(atendimento.getId())).thenReturn(Optional.of(atendimento));
@@ -57,8 +57,8 @@ class RegistrarReavaliacaoAppServiceTest {
     }
 
     @Test
-    @DisplayName("Should not add measurement when atendimento is finished")
-    void shouldNotAddMeasurementWhenAtendimentoIsFinished() {
+    @DisplayName("Não deve adicionar medição quando o atendimento estiver finalizado")
+    void naoDeveAdicionarMedicaoQuandoAtendimentoEstiverFinalizado() {
         final MedicaoSinaisVitais novaMedicao = new MedicaoSinaisVitais(UUID.randomUUID(), 36.8, 85, LocalDateTime.now());
         final Atendimento atendimento = new Atendimento(UUID.randomUUID(), new Cpf("52998224725"), StatusAtendimento.FINALIZADO, ClassificacaoRisco.VERDE, List.of());
         when(atendimentoRepositoryMock.buscarPorId(atendimento.getId())).thenReturn(Optional.of(atendimento));

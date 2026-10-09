@@ -77,13 +77,19 @@ public class Atendimento {
     }
 
     public void registrarMedicao(MedicaoSinaisVitais medicao) {
-        if (status == StatusAtendimento.FINALIZADO) {
-            throw new IllegalStateException("Não é possível registrar medição em atendimento finalizado.");
+        if (status == StatusAtendimento.FINALIZADO || status == StatusAtendimento.CANCELADO) {
+            throw new IllegalStateException("Não é possível registrar medição em atendimento finalizado ou cancelado.");
         }
         medicoes.add(medicao);
     }
 
     public void reclassificarRisco(ClassificacaoRisco novaClassificacao, String justificativa) {
+        if (status == StatusAtendimento.FINALIZADO || status == StatusAtendimento.CANCELADO) {
+            throw new IllegalStateException("Não é possível reclassificar o risco de atendimento finalizado ou cancelado.");
+        }
+        if (justificativa == null || justificativa.isBlank()) {
+            throw new IllegalArgumentException("A justificativa da reclassificação não pode ser vazia.");
+        }
         classificacaoRisco = novaClassificacao;
     }
 

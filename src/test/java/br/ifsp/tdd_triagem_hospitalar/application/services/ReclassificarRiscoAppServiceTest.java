@@ -8,6 +8,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -28,8 +31,8 @@ class ReclassificarRiscoAppServiceTest {
     @InjectMocks ReclassificarRiscoAppService sut;
 
     @Test
-    @DisplayName("Should reclassify risk from green to red with justification")
-    void shouldReclassifyRiskFromGreenToRedWithJustification() {
+    @DisplayName("Deve reclassificar risco de verde para vermelho com justificativa")
+    void deveReclassificarRiscoDeVerdeParaVermelhoComJustificativa() {
         final Atendimento atendimento = new Atendimento(UUID.randomUUID(), new Cpf("52998224725"), StatusAtendimento.AGUARDANDO_CONSULTA, ClassificacaoRisco.VERDE, List.of());
         when(atendimentoRepositoryMock.buscarPorId(atendimento.getId())).thenReturn(Optional.of(atendimento));
 
@@ -37,5 +40,25 @@ class ReclassificarRiscoAppServiceTest {
 
         assertThat(atendimento.getClassificacaoRisco()).isEqualTo(ClassificacaoRisco.VERMELHO);
         verify(atendimentoRepositoryMock, times(1)).salvar(atendimento);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @DisplayName("Não deve reclassificar risco sem justificativa")
+    void naoDeveReclassificarRiscoSemJustificativa(String justificativa) {
+        final Atendimento atendimento = new Atendimento(UUID.randomUUID(), new Cpf("52998224725"), StatusAtendimento.AGUARDANDO_CONSULTA, ClassificacaoRisco.VERDE, List.of());
+        when(atendimentoRepositoryMock.buscarPorId(atendimento.getId())).thenReturn(Optional.of(atendimento));
+
+        assertThatIllegalArgumentException().isThrownBy(() -> sut.reclassificarRisco(atendimento.getId(), ClassificacaoRisco.VERMELHO, justificativa));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = StatusAtendimento.class, names = {"FINALIZADO", "CANCELADO"})
+    @DisplayName("Não deve reclassificar risco de atendimento finalizado ou cancelado")
+    void naoDeveReclassificarRiscoDeAtendimentoFinalizadoOuCancelado(StatusAtendimento status) {
+        final Atendimento atendimento = new Atendimento(UUID.randomUUID(), new Cpf("52998224725"), status, ClassificacaoRisco.VERDE, List.of());
+        when(atendimentoRepositoryMock.buscarPorId(atendimento.getId())).thenReturn(Optional.of(atendimento));
+
+        assertThatIllegalStateException().isThrownBy(() -> sut.reclassificarRisco(atendimento.getId(), ClassificacaoRisco.VERMELHO, "Paciente com piora na saturação"));
     }
 }

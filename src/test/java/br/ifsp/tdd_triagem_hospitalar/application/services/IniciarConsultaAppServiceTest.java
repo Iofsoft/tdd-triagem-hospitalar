@@ -28,8 +28,8 @@ class IniciarConsultaAppServiceTest {
     @InjectMocks IniciarConsultaAppService sut;
 
     @Test
-    @DisplayName("Should start consultation when atendimento is waiting for consultation")
-    void shouldStartConsultationWhenAtendimentoIsWaitingForConsultation() {
+    @DisplayName("Deve iniciar consulta quando o atendimento estiver aguardando consulta")
+    void deveIniciarConsultaQuandoAtendimentoEstiverAguardandoConsulta() {
         final Atendimento atendimento = new Atendimento(UUID.randomUUID(), new Cpf("52998224725"), StatusAtendimento.AGUARDANDO_CONSULTA, ClassificacaoRisco.VERDE, List.of());
         when(atendimentoRepositoryMock.buscarPorId(atendimento.getId())).thenReturn(Optional.of(atendimento));
 
@@ -40,8 +40,8 @@ class IniciarConsultaAppServiceTest {
     }
 
     @Test
-    @DisplayName("Should not start consultation before triage")
-    void shouldNotStartConsultationBeforeTriage() {
+    @DisplayName("Não deve iniciar consulta antes da triagem")
+    void naoDeveIniciarConsultaAntesDaTriagem() {
         final Atendimento atendimento = new Atendimento(UUID.randomUUID(), new Cpf("52998224725"), StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of());
         when(atendimentoRepositoryMock.buscarPorId(atendimento.getId())).thenReturn(Optional.of(atendimento));
 
@@ -49,8 +49,8 @@ class IniciarConsultaAppServiceTest {
     }
 
     @Test
-    @DisplayName("Should not start consultation already started")
-    void shouldNotStartConsultationAlreadyStarted() {
+    @DisplayName("Não deve iniciar consulta já em andamento")
+    void naoDeveIniciarConsultaJaEmAndamento() {
         final Atendimento atendimento = new Atendimento(UUID.randomUUID(), new Cpf("52998224725"), StatusAtendimento.EM_CONSULTA, ClassificacaoRisco.VERDE, List.of());
         when(atendimentoRepositoryMock.buscarPorId(atendimento.getId())).thenReturn(Optional.of(atendimento));
 
@@ -58,8 +58,8 @@ class IniciarConsultaAppServiceTest {
     }
 
     @Test
-    @DisplayName("Should not start consultation of cancelled atendimento")
-    void shouldNotStartConsultationOfCancelledAtendimento() {
+    @DisplayName("Não deve iniciar consulta de atendimento cancelado")
+    void naoDeveIniciarConsultaDeAtendimentoCancelado() {
         final Atendimento atendimento = new Atendimento(UUID.randomUUID(), new Cpf("52998224725"), StatusAtendimento.CANCELADO, null, List.of());
         when(atendimentoRepositoryMock.buscarPorId(atendimento.getId())).thenReturn(Optional.of(atendimento));
 
