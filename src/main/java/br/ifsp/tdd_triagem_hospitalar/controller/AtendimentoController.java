@@ -1,6 +1,7 @@
 package br.ifsp.tdd_triagem_hospitalar.controller;
 
 import br.ifsp.tdd_triagem_hospitalar.application.services.IniciarConsultaAppService;
+import br.ifsp.tdd_triagem_hospitalar.application.services.ReclassificarRiscoAppService;
 import br.ifsp.tdd_triagem_hospitalar.application.services.RegistrarReavaliacaoAppService;
 import br.ifsp.tdd_triagem_hospitalar.domain.model.MedicaoSinaisVitais;
 import org.springframework.http.HttpStatus;
@@ -21,11 +22,14 @@ public class AtendimentoController {
 
     private final IniciarConsultaAppService iniciarConsultaAppService;
     private final RegistrarReavaliacaoAppService registrarReavaliacaoAppService;
+    private final ReclassificarRiscoAppService reclassificarRiscoAppService;
 
     public AtendimentoController(IniciarConsultaAppService iniciarConsultaAppService,
-                                 RegistrarReavaliacaoAppService registrarReavaliacaoAppService) {
+                                 RegistrarReavaliacaoAppService registrarReavaliacaoAppService,
+                                 ReclassificarRiscoAppService reclassificarRiscoAppService) {
         this.iniciarConsultaAppService = iniciarConsultaAppService;
         this.registrarReavaliacaoAppService = registrarReavaliacaoAppService;
+        this.reclassificarRiscoAppService = reclassificarRiscoAppService;
     }
 
     @PatchMapping("/{id}/consulta")
@@ -39,5 +43,11 @@ public class AtendimentoController {
         final MedicaoSinaisVitais medicao = new MedicaoSinaisVitais(UUID.randomUUID(), request.temperatura(), request.frequenciaCardiaca(), LocalDateTime.now());
         registrarReavaliacaoAppService.registrarReavaliacao(id, medicao);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PatchMapping("/{id}/classificacao-risco")
+    public ResponseEntity<Void> reclassificarRisco(@PathVariable UUID id, @RequestBody ReclassificarRiscoRequest request) {
+        reclassificarRiscoAppService.reclassificarRisco(id, request.novaClassificacao(), request.justificativa());
+        return ResponseEntity.noContent().build();
     }
 }
