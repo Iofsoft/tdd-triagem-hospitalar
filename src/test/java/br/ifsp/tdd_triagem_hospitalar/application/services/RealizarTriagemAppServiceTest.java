@@ -12,11 +12,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -119,5 +121,41 @@ class RealizarTriagemAppServiceTest {
                 .withMessage("Triagem só pode ser realizada quando o atendimento está aguardando triagem.");
 
         verify(atendimentoRepository, never()).salvar(any());
+    }
+
+    @Test
+    @DisplayName("Deve realizar triagem com sucesso vinculando medição, risco e alterando status para AguardandoConsulta")
+    void deveRealizarTriagemComSucesso() {
+        UUID atendimentoId = UUID.randomUUID();
+        Atendimento atendimento = new Atendimento(
+                atendimentoId,
+                new Cpf("52998224725"),
+                StatusAtendimento.AGUARDANDO_TRIAGEM,
+                null,
+                new ArrayList<>()
+        );
+
+        MedicaoSinaisVitais medicao = new MedicaoSinaisVitais(UUID.randomUUID(), 36.8, 75, LocalDateTime.now());
+        ClassificacaoRisco risco = ClassificacaoRisco.AMARELO;
+
+        when(atendimentoRepository.buscarPorId(atendimentoId)).thenReturn(Optional.of(atendimento));
+
+        sut.realizarTriagem(atendimentoId, medicao, risco);
+
+        assertSoftly(softly -> {
+            softly.assertThat(atendimento.getStatus())
+                    .as("Status do atendimento após triagem")
+                    .isEqualTo(StatusAtendimento.AGUARDANDO_CONSULTA);
+
+            softly.assertThat(atendimento.getClassificacaoRisco())
+                    .as("Classificação de risco atribuída")
+                    .isEqualTo(ClassificacaoRisco.AMARELO);
+
+            softly.assertThat(atendimento.getMedicoes())
+                    .as("Medições de sinais vitais registradas")
+                    .containsExactly(medicao);
+        });
+
+        verify(atendimentoRepository, times(1)).salvar(atendimento);
     }
 }
