@@ -15,6 +15,10 @@ public class AbrirAtendimentoAppService {
     public UUID abrirAtendimento(String cpf) {
         Cpf cpfObj = new Cpf(cpf);
 
+        if (atendimentoRepository.existeAtendimentoAtivoPorCpf(cpfObj)) {
+            throw new IllegalStateException("Paciente já possui atendimento ativo.");
+        }
+
         return null;
     }
 }
