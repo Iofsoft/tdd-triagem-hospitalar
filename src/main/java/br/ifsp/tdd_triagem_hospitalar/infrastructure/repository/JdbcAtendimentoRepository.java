@@ -66,4 +66,9 @@ public class JdbcAtendimentoRepository implements AtendimentoRepository {
 
         return atendimentos.stream().findFirst();
     }
+
+    @Override
+    public boolean existeAtendimentoAtivoPorCpf(Cpf cpf) {
+        return false;
+    }
 }
