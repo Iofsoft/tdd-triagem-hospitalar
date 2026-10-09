@@ -56,9 +56,10 @@ public class Atendimento {
     }
 
     public Atendimento(UUID id, Cpf cpf, StatusAtendimento status, ClassificacaoRisco classificacaoRisco,
-                       List<MedicaoSinaisVitais> medicoes, String prescricao) {
-        this(id, cpf, status, classificacaoRisco, medicoes); // chama o construtor normal
-        this.prescricao = prescricao; // adiciona a prescrição
+                       List<MedicaoSinaisVitais> medicoes, String prescricao, String motivoCancelamento) {
+        this(id, cpf, status, classificacaoRisco, medicoes);
+        this.prescricao = prescricao;
+        this.motivoCancelamento = motivoCancelamento;
     }
 
     public UUID getId() {
@@ -120,6 +121,9 @@ public class Atendimento {
         if ((this.status == StatusAtendimento.CANCELADO) || (this.status == StatusAtendimento.FINALIZADO)){
             throw new IllegalStateException("Atendimentos já cancelados ou finalizados não podem ser cancelados");
         }
+
+        if (motivoCancelamento == null || motivoCancelamento.isBlank())
+            throw new IllegalArgumentException("Motivo do cancelamento não pode ser vazio ou nulo");
 
         this.status = StatusAtendimento.CANCELADO;
         this.motivoCancelamento = motivoCancelamento;

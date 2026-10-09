@@ -23,17 +23,20 @@ public class AtendimentoController {
     private final ReclassificarRiscoAppService reclassificarRiscoAppService;
     private final RegistrarPrescricaoAppService registrarPrescricaoAppService;
     private final FinalizarAtendimentoAppService finalizarAtendimentoAppService;
+    private final CancelarAtendimentoAppService cancelarAtendimentoAppService;
 
     public AtendimentoController(IniciarConsultaAppService iniciarConsultaAppService,
                                  RegistrarReavaliacaoAppService registrarReavaliacaoAppService,
                                  ReclassificarRiscoAppService reclassificarRiscoAppService,
                                  RegistrarPrescricaoAppService registrarPrescricaoAppService,
-                                 FinalizarAtendimentoAppService finalizarAtendimentoAppService) {
+                                 FinalizarAtendimentoAppService finalizarAtendimentoAppService,
+                                 CancelarAtendimentoAppService cancelarAtendimentoAppService) {
         this.iniciarConsultaAppService = iniciarConsultaAppService;
         this.registrarReavaliacaoAppService = registrarReavaliacaoAppService;
         this.reclassificarRiscoAppService = reclassificarRiscoAppService;
         this.registrarPrescricaoAppService = registrarPrescricaoAppService;
         this.finalizarAtendimentoAppService = finalizarAtendimentoAppService;
+        this.cancelarAtendimentoAppService = cancelarAtendimentoAppService;
     }
 
     @PatchMapping("/{id}/consulta")
@@ -65,6 +68,13 @@ public class AtendimentoController {
     @PatchMapping("/{id}/finalizacao")
     public ResponseEntity<Void> finalizarAtendimento(@PathVariable UUID id) {
         finalizarAtendimentoAppService.finalizarAtendimento(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/cancelamento")
+    public ResponseEntity<Void> cancelarAtendimento(@PathVariable UUID id, @RequestBody
+    CancelarAtendimentoRequest request) {
+        cancelarAtendimentoAppService.cancelarAtendimento(id, request.motivo());
         return ResponseEntity.noContent().build();
     }
 }

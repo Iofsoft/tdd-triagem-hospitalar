@@ -1,7 +1,10 @@
 package br.ifsp.tdd_triagem_hospitalar.application.services;
 
+import org.springframework.stereotype.Service;
+
 import java.util.UUID;
 
+@Service
 public class CancelarAtendimentoAppService {
     private final AtendimentoRepository atendimentoRepository;
 

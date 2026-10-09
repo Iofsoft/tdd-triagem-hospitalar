@@ -3,7 +3,8 @@ CREATE TABLE IF NOT EXISTS atendimento (
     cpf TEXT NOT NULL,
     status TEXT NOT NULL,
     classificacao_risco TEXT,
-    prescricao TEXT
+    prescricao TEXT,
+    motivo_cancelamento TEXT
 );
 
 CREATE TABLE IF NOT EXISTS medicao (
