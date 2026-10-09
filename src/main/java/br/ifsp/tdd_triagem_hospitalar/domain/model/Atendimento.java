@@ -13,6 +13,12 @@ public class Atendimento {
     private ClassificacaoRisco classificacaoRisco;
     private final List<MedicaoSinaisVitais> medicoes;
     private String prescricao;
+    private String motivoCancelamento;
+
+
+    public String getMotivoCancelamento() {
+        return motivoCancelamento;
+    }
 
 
     public String getPrescricao() {
@@ -108,6 +114,15 @@ public class Atendimento {
             throw new IllegalStateException("Atendimento não pode ser finalizado sem prescrição");
 
         this.status = StatusAtendimento.FINALIZADO;
+    }
+
+    public void cancelarAtendimento(String motivoCancelamento){
+        if ((this.status == StatusAtendimento.CANCELADO) || (this.status == StatusAtendimento.FINALIZADO)){
+            throw new IllegalStateException("Atendimentos já cancelados ou finalizados não podem ser cancelados");
+        }
+
+        this.status = StatusAtendimento.CANCELADO;
+        this.motivoCancelamento = motivoCancelamento;
     }
 
     @Override

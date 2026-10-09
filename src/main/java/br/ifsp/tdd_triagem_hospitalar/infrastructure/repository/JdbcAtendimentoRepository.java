@@ -66,4 +66,13 @@ public class JdbcAtendimentoRepository implements AtendimentoRepository {
 
         return atendimentos.stream().findFirst();
     }
+
+    @Override
+    public boolean existeAtendimentoAtivoPorCpf(Cpf cpf) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM atendimento where cpf = ? AND status NOT IN ('FINALIZADO', 'CANCELADO')",
+                Integer.class,
+                cpf.valor());
+        return count != null && count > 0;
+    }
 }
