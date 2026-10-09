@@ -18,8 +18,6 @@ public class RealizarTriagemAppService {
         Atendimento atendimento = atendimentoRepository.buscarPorId(atendimentoId)
                 .orElseThrow(() -> new IllegalArgumentException("Atendimento não encontrado"));
 
-        if (risco == null) {
-            throw new IllegalArgumentException("A classificação de risco é obrigatória para a triagem.");
-        }
+        atendimento.realizarTriagem(medicao, risco);
     }
 }
