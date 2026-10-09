@@ -1,8 +1,6 @@
 package br.ifsp.tdd_triagem_hospitalar.controller;
 
-import br.ifsp.tdd_triagem_hospitalar.application.services.IniciarConsultaAppService;
-import br.ifsp.tdd_triagem_hospitalar.application.services.ReclassificarRiscoAppService;
-import br.ifsp.tdd_triagem_hospitalar.application.services.RegistrarReavaliacaoAppService;
+import br.ifsp.tdd_triagem_hospitalar.application.services.*;
 import br.ifsp.tdd_triagem_hospitalar.domain.model.MedicaoSinaisVitais;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,13 +21,19 @@ public class AtendimentoController {
     private final IniciarConsultaAppService iniciarConsultaAppService;
     private final RegistrarReavaliacaoAppService registrarReavaliacaoAppService;
     private final ReclassificarRiscoAppService reclassificarRiscoAppService;
+    private final RegistrarPrescricaoAppService registrarPrescricaoAppService;
+    private final FinalizarAtendimentoAppService finalizarAtendimentoAppService;
 
     public AtendimentoController(IniciarConsultaAppService iniciarConsultaAppService,
                                  RegistrarReavaliacaoAppService registrarReavaliacaoAppService,
-                                 ReclassificarRiscoAppService reclassificarRiscoAppService) {
+                                 ReclassificarRiscoAppService reclassificarRiscoAppService,
+                                 RegistrarPrescricaoAppService registrarPrescricaoAppService,
+                                 FinalizarAtendimentoAppService finalizarAtendimentoAppService) {
         this.iniciarConsultaAppService = iniciarConsultaAppService;
         this.registrarReavaliacaoAppService = registrarReavaliacaoAppService;
         this.reclassificarRiscoAppService = reclassificarRiscoAppService;
+        this.registrarPrescricaoAppService = registrarPrescricaoAppService;
+        this.finalizarAtendimentoAppService = finalizarAtendimentoAppService;
     }
 
     @PatchMapping("/{id}/consulta")
@@ -48,6 +52,19 @@ public class AtendimentoController {
     @PatchMapping("/{id}/classificacao-risco")
     public ResponseEntity<Void> reclassificarRisco(@PathVariable UUID id, @RequestBody ReclassificarRiscoRequest request) {
         reclassificarRiscoAppService.reclassificarRisco(id, request.novaClassificacao(), request.justificativa());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/prescricao")
+    public ResponseEntity<Void> registrarPrescricao(@PathVariable UUID id, @RequestBody
+    RegistrarPrescricaoRequest request) {
+        registrarPrescricaoAppService.registrarPrescricao(id, request.prescricao());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/finalizacao")
+    public ResponseEntity<Void> finalizarAtendimento(@PathVariable UUID id) {
+        finalizarAtendimentoAppService.finalizarAtendimento(id);
         return ResponseEntity.noContent().build();
     }
 }
