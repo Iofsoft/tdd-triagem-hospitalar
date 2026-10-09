@@ -2,7 +2,8 @@ CREATE TABLE IF NOT EXISTS atendimento (
     id TEXT PRIMARY KEY,
     cpf TEXT NOT NULL,
     status TEXT NOT NULL,
-    classificacao_risco TEXT
+    classificacao_risco TEXT,
+    prescricao TEXT
 );
 
 CREATE TABLE IF NOT EXISTS medicao (

@@ -27,11 +27,12 @@ public class JdbcAtendimentoRepository implements AtendimentoRepository {
     public void salvar(Atendimento atendimento) {
         final String classificacaoRisco = atendimento.getClassificacaoRisco() == null ? null : atendimento.getClassificacaoRisco().name();
 
-        jdbcTemplate.update("INSERT OR REPLACE INTO atendimento (id, cpf, status, classificacao_risco) VALUES (?, ?, ?, ?)",
+        jdbcTemplate.update("INSERT OR REPLACE INTO atendimento (id, cpf, status, classificacao_risco, prescricao) VALUES (?, ?, ?, ?, ?)",
                 atendimento.getId().toString(),
                 atendimento.getCpf().valor(),
                 atendimento.getStatus().name(),
-                classificacaoRisco);
+                classificacaoRisco,
+                atendimento.getPrescricao());
 
         for (MedicaoSinaisVitais medicao : atendimento.getMedicoes()) {
             jdbcTemplate.update("INSERT OR REPLACE INTO medicao (id, atendimento_id, temperatura, frequencia_cardiaca, data_hora) VALUES (?, ?, ?, ?, ?)",
@@ -59,7 +60,8 @@ public class JdbcAtendimentoRepository implements AtendimentoRepository {
                         new Cpf(rs.getString("cpf")),
                         StatusAtendimento.valueOf(rs.getString("status")),
                         rs.getString("classificacao_risco") == null ? null : ClassificacaoRisco.valueOf(rs.getString("classificacao_risco")),
-                        medicoes),
+                        medicoes,
+                        rs.getString("prescricao")),
                 id.toString());
 
         return atendimentos.stream().findFirst();

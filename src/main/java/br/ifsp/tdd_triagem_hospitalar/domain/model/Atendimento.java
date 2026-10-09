@@ -49,6 +49,12 @@ public class Atendimento {
         this.medicoes = medicoes == null ? new ArrayList<>() : new ArrayList<>(medicoes);
     }
 
+    public Atendimento(UUID id, Cpf cpf, StatusAtendimento status, ClassificacaoRisco classificacaoRisco,
+                       List<MedicaoSinaisVitais> medicoes, String prescricao) {
+        this(id, cpf, status, classificacaoRisco, medicoes); // chama o construtor normal
+        this.prescricao = prescricao; // adiciona a prescrição
+    }
+
     public UUID getId() {
         return id;
     }
@@ -91,6 +97,17 @@ public class Atendimento {
             throw new IllegalArgumentException("A justificativa da reclassificação não pode ser vazia.");
         }
         classificacaoRisco = novaClassificacao;
+    }
+
+    public void finalizarAtendimento(){
+
+        if (this.status != StatusAtendimento.EM_CONSULTA)
+            throw new IllegalStateException("Atendimento deve possuir status EmConsulta para ser finalizado");
+
+        if (this.prescricao == null || this.prescricao.isBlank())
+            throw new IllegalStateException("Atendimento não pode ser finalizado sem prescrição");
+
+        this.status = StatusAtendimento.FINALIZADO;
     }
 
     @Override
