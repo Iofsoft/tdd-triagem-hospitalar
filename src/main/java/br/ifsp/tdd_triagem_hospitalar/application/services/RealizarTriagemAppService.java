@@ -17,5 +17,9 @@ public class RealizarTriagemAppService {
     public void realizarTriagem(UUID atendimentoId, MedicaoSinaisVitais medicao, ClassificacaoRisco risco) {
         Atendimento atendimento = atendimentoRepository.buscarPorId(atendimentoId)
                 .orElseThrow(() -> new IllegalArgumentException("Atendimento não encontrado"));
+
+        if (risco == null) {
+            throw new IllegalArgumentException("A classificação de risco é obrigatória para a triagem.");
+        }
     }
 }
