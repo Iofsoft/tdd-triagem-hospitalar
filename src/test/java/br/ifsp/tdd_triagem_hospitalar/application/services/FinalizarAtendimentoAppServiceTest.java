@@ -70,4 +70,22 @@ class FinalizarAtendimentoAppServiceTest {
         verify(repositoryMock, never()).salvar(any(Atendimento.class));
     }
 
+    @Test
+    void naoDeveFinalizarAtendimentoForaDeConsulta() {
+        var idAtendimento = UUID.randomUUID();
+        var atendimento = new Atendimento(
+                idAtendimento,
+                new Cpf("52998224725"),
+                StatusAtendimento.AGUARDANDO_CONSULTA,
+                ClassificacaoRisco.VERDE,
+                List.of()
+        );
+        when(repositoryMock.buscarPorId(idAtendimento)).thenReturn(Optional.of(atendimento));
+        assertThatIllegalStateException().isThrownBy(()->{
+            service.finalizarAtendimento(idAtendimento);
+        });
+
+        verify(repositoryMock, never()).salvar(any(Atendimento.class));
+
+    }
 }
