@@ -19,6 +19,7 @@ import java.util.UUID;
 public class AtendimentoController {
 
     private final AbrirAtendimentoAppService abrirAtendimentoAppService;
+    private final RealizarTriagemAppService realizarTriagemAppService;
     private final IniciarConsultaAppService iniciarConsultaAppService;
     private final RegistrarReavaliacaoAppService registrarReavaliacaoAppService;
     private final ReclassificarRiscoAppService reclassificarRiscoAppService;
@@ -27,6 +28,7 @@ public class AtendimentoController {
     private final CancelarAtendimentoAppService cancelarAtendimentoAppService;
 
     public AtendimentoController(AbrirAtendimentoAppService abrirAtendimentoAppService,
+                                 RealizarTriagemAppService realizarTriagemAppService,
                                  IniciarConsultaAppService iniciarConsultaAppService,
                                  RegistrarReavaliacaoAppService registrarReavaliacaoAppService,
                                  ReclassificarRiscoAppService reclassificarRiscoAppService,
@@ -34,6 +36,7 @@ public class AtendimentoController {
                                  FinalizarAtendimentoAppService finalizarAtendimentoAppService,
                                  CancelarAtendimentoAppService cancelarAtendimentoAppService) {
         this.abrirAtendimentoAppService = abrirAtendimentoAppService;
+        this.realizarTriagemAppService = realizarTriagemAppService;
         this.iniciarConsultaAppService = iniciarConsultaAppService;
         this.registrarReavaliacaoAppService = registrarReavaliacaoAppService;
         this.reclassificarRiscoAppService = reclassificarRiscoAppService;
@@ -46,6 +49,18 @@ public class AtendimentoController {
     public ResponseEntity<UUID> abrirAtendimento(@RequestBody AbrirAtendimentoRequest request) {
         UUID id = abrirAtendimentoAppService.abrirAtendimento(request.cpf());
         return ResponseEntity.status(HttpStatus.CREATED).body(id);
+    }
+
+    @PostMapping("/{id}/triagem")
+    public ResponseEntity<Void> realizarTriagem(@PathVariable UUID id, @RequestBody RealizarTriagemRequest request) {
+        final MedicaoSinaisVitais medicao = new MedicaoSinaisVitais(
+                UUID.randomUUID(),
+                request.temperatura(),
+                request.frequenciaCardiaca(),
+                LocalDateTime.now()
+        );
+        realizarTriagemAppService.realizarTriagem(id, medicao, request.classificacaoRisco());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PatchMapping("/{id}/consulta")
