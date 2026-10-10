@@ -18,6 +18,7 @@ import java.util.UUID;
 @RequestMapping(path = "/api/v1/atendimentos")
 public class AtendimentoController {
 
+    private final AbrirAtendimentoAppService abrirAtendimentoAppService;
     private final IniciarConsultaAppService iniciarConsultaAppService;
     private final RegistrarReavaliacaoAppService registrarReavaliacaoAppService;
     private final ReclassificarRiscoAppService reclassificarRiscoAppService;
@@ -25,18 +26,26 @@ public class AtendimentoController {
     private final FinalizarAtendimentoAppService finalizarAtendimentoAppService;
     private final CancelarAtendimentoAppService cancelarAtendimentoAppService;
 
-    public AtendimentoController(IniciarConsultaAppService iniciarConsultaAppService,
+    public AtendimentoController(AbrirAtendimentoAppService abrirAtendimentoAppService,
+                                 IniciarConsultaAppService iniciarConsultaAppService,
                                  RegistrarReavaliacaoAppService registrarReavaliacaoAppService,
                                  ReclassificarRiscoAppService reclassificarRiscoAppService,
                                  RegistrarPrescricaoAppService registrarPrescricaoAppService,
                                  FinalizarAtendimentoAppService finalizarAtendimentoAppService,
                                  CancelarAtendimentoAppService cancelarAtendimentoAppService) {
+        this.abrirAtendimentoAppService = abrirAtendimentoAppService;
         this.iniciarConsultaAppService = iniciarConsultaAppService;
         this.registrarReavaliacaoAppService = registrarReavaliacaoAppService;
         this.reclassificarRiscoAppService = reclassificarRiscoAppService;
         this.registrarPrescricaoAppService = registrarPrescricaoAppService;
         this.finalizarAtendimentoAppService = finalizarAtendimentoAppService;
         this.cancelarAtendimentoAppService = cancelarAtendimentoAppService;
+    }
+
+    @PostMapping
+    public ResponseEntity<UUID> abrirAtendimento(@RequestBody AbrirAtendimentoRequest request) {
+        UUID id = abrirAtendimentoAppService.abrirAtendimento(request.cpf());
+        return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
     @PatchMapping("/{id}/consulta")
