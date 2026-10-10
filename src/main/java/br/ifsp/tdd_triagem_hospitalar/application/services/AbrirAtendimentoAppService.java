@@ -3,10 +3,12 @@ package br.ifsp.tdd_triagem_hospitalar.application.services;
 import br.ifsp.tdd_triagem_hospitalar.domain.model.Atendimento;
 import br.ifsp.tdd_triagem_hospitalar.domain.model.Cpf;
 import br.ifsp.tdd_triagem_hospitalar.domain.model.StatusAtendimento;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
+@Service
 public class AbrirAtendimentoAppService {
 
     private final AtendimentoRepository atendimentoRepository;
