@@ -4,6 +4,8 @@ import br.ifsp.tdd_triagem_hospitalar.domain.model.Atendimento;
 import br.ifsp.tdd_triagem_hospitalar.domain.model.ClassificacaoRisco;
 import br.ifsp.tdd_triagem_hospitalar.domain.model.Cpf;
 import br.ifsp.tdd_triagem_hospitalar.domain.model.StatusAtendimento;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +23,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @Tag("UnitTest")
-@Tag("TDD")
 class CancelarAtendimentoAppServiceTest {
 
     @Mock
@@ -30,63 +31,102 @@ class CancelarAtendimentoAppServiceTest {
     @InjectMocks
     private CancelarAtendimentoAppService service;
 
-    @Test
-    void deveCancelarAtendimentoEmAndamentoComJustificativaValida(){
-        var idAtendimento = UUID.randomUUID();
-        var atendimento = new Atendimento(
-                idAtendimento,
-                new Cpf("52998224725"),
-                StatusAtendimento.EM_CONSULTA,
-                ClassificacaoRisco.VERDE,
-                List.of()
-        );
+    @Nested
+    @Tag("TDD")
+    @DisplayName("Testes Unitários")
+    class UnitTests {
 
-        when(repositoryMock.buscarPorId(idAtendimento)).thenReturn(Optional.of(atendimento));
 
-        String motivo = "Desistência do paciente";
-        service.cancelarAtendimento(idAtendimento, motivo);
-        assertThat(atendimento.getStatus()).isEqualTo(StatusAtendimento.CANCELADO);
-        assertThat(atendimento.getMotivoCancelamento()).isEqualTo(motivo);
-        verify(repositoryMock).salvar(atendimento);
+        @Test
+        void deveCancelarAtendimentoEmAndamentoComJustificativaValida() {
+            var idAtendimento = UUID.randomUUID();
+            var atendimento = new Atendimento(
+                    idAtendimento,
+                    new Cpf("52998224725"),
+                    StatusAtendimento.EM_CONSULTA,
+                    ClassificacaoRisco.VERDE,
+                    List.of()
+            );
+
+            when(repositoryMock.buscarPorId(idAtendimento)).thenReturn(Optional.of(atendimento));
+
+            String motivo = "Desistência do paciente";
+            service.cancelarAtendimento(idAtendimento, motivo);
+            assertThat(atendimento.getStatus()).isEqualTo(StatusAtendimento.CANCELADO);
+            assertThat(atendimento.getMotivoCancelamento()).isEqualTo(motivo);
+            verify(repositoryMock).salvar(atendimento);
+        }
+
+        @Test
+        void naoDeveCancelarAtendimentoJaFinalizado() {
+            var idAtendimento = UUID.randomUUID();
+            var atendimento = new Atendimento(
+                    idAtendimento,
+                    new Cpf("52998224725"),
+                    StatusAtendimento.FINALIZADO,
+                    ClassificacaoRisco.VERDE,
+                    List.of()
+            );
+
+            when(repositoryMock.buscarPorId(idAtendimento)).thenReturn(Optional.of(atendimento));
+
+            assertThatIllegalStateException().isThrownBy(() -> {
+                service.cancelarAtendimento(idAtendimento, "Desistência");
+            });
+
+            verify(repositoryMock, never()).salvar(any(Atendimento.class));
+        }
+
+        @Test
+        void naoDeveCancelarAtendimentoSemMotivo() {
+            var idAtendimento = UUID.randomUUID();
+            var atendimento = new Atendimento(
+                    idAtendimento,
+                    new Cpf("52998224725"),
+                    StatusAtendimento.EM_CONSULTA,
+                    ClassificacaoRisco.VERDE,
+                    List.of()
+            );
+
+            when(repositoryMock.buscarPorId(idAtendimento)).thenReturn(Optional.of(atendimento));
+
+            assertThatIllegalArgumentException().isThrownBy(() -> {
+                service.cancelarAtendimento(idAtendimento, "");
+            });
+
+            verify(repositoryMock, never()).salvar(any(Atendimento.class));
+        }
+
     }
 
-    @Test
-    void naoDeveCancelarAtendimentoJaFinalizado() {
-        var idAtendimento = UUID.randomUUID();
-        var atendimento = new Atendimento(
-                idAtendimento,
-                new Cpf("52998224725"),
-                StatusAtendimento.FINALIZADO,
-                ClassificacaoRisco.VERDE,
-                List.of()
-        );
+    @Tag("Structural")
+    @Nested
+    @DisplayName("Testes Estruturais")
+    class TestesEstruturais{
 
-        when(repositoryMock.buscarPorId(idAtendimento)).thenReturn(Optional.of(atendimento));
+        @Test
+        @DisplayName("Não deve cancelar atendimento Cancelado")
+        void naoDeveCancelarAtendimentoJaCancelado() {
+            var idAtendimento = UUID.randomUUID();
+            var atendimento = new Atendimento(
+                    idAtendimento,
+                    new Cpf("52998224725"),
+                    StatusAtendimento.CANCELADO,
+                    ClassificacaoRisco.VERDE,
+                    List.of()
+            );
 
-        assertThatIllegalStateException().isThrownBy(() -> {
-            service.cancelarAtendimento(idAtendimento, "Desistência");
-        });
+            when(repositoryMock.buscarPorId(idAtendimento)).thenReturn(Optional.of(atendimento));
 
-        verify(repositoryMock, never()).salvar(any(Atendimento.class));
-    }
+            assertThatIllegalStateException().isThrownBy(() -> {
+                service.cancelarAtendimento(idAtendimento, "Atendimentos já cancelados ou finalizados não podem ser cancelados");
+            });
 
-    @Test
-    void naoDeveCancelarAtendimentoSemMotivo() {
-        var idAtendimento = UUID.randomUUID();
-        var atendimento = new Atendimento(
-                idAtendimento,
-                new Cpf("52998224725"),
-                StatusAtendimento.EM_CONSULTA,
-                ClassificacaoRisco.VERDE,
-                List.of()
-        );
+            verify(repositoryMock, never()).salvar(any(Atendimento.class));
+        }
 
-        when(repositoryMock.buscarPorId(idAtendimento)).thenReturn(Optional.of(atendimento));
 
-        assertThatIllegalArgumentException().isThrownBy(() -> {
-            service.cancelarAtendimento(idAtendimento, "");
-        });
 
-        verify(repositoryMock, never()).salvar(any(Atendimento.class));
+
     }
 }

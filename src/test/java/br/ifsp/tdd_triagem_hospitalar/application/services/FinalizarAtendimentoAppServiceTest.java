@@ -34,7 +34,7 @@ class FinalizarAtendimentoAppServiceTest {
     @Tag("TDD")
     @Nested
     @DisplayName("Testes Unitários")
-    class UnitTests{
+    class TestesUnitarios{
 
         @Test
         void deveFinalizarAtendimentoComPrescricaoPrevia(){
