@@ -1,6 +1,7 @@
 package br.ifsp.tdd_triagem_hospitalar.domain.model;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -11,6 +12,8 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("UnitTest")
+@Tag("TDD")
 class MedicaoSinaisVitaisTest {
     private final UUID idValido = UUID.randomUUID();
     private final LocalDateTime dataHoraValida = LocalDateTime.now();

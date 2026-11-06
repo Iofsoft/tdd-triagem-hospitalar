@@ -1,11 +1,14 @@
 package br.ifsp.tdd_triagem_hospitalar.domain.model;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+@Tag("UnitTest")
+@Tag("TDD")
 class StatusAtendimentoTest {
 
     @ParameterizedTest
