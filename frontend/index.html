@@ -74,6 +74,32 @@
       background-color: #444;
     }
 
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .risco-VERMELHO {
+      color: #c62828;
+      font-weight: bold;
+    }
+
+    .risco-AMARELO {
+      color: #b88600;
+      font-weight: bold;
+    }
+
+    .risco-VERDE {
+      color: #2e7d32;
+      font-weight: bold;
+    }
+
     .escondido {
       display: none;
     }
@@ -112,13 +138,37 @@
 
     <div id="tela-fila" class="escondido">
       <div class="caixa">
+        <h2>Novo atendimento</h2>
+        <label for="novo-cpf">CPF do paciente</label>
+        <input id="novo-cpf" placeholder="Somente números">
+        <button id="btn-abrir-atendimento" onclick="abrirAtendimento()">Abrir atendimento</button>
+      </div>
+
+      <div class="caixa">
         <h2>Atendimentos</h2>
-        <p>Nenhum atendimento ainda.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>CPF</th>
+              <th>Status</th>
+              <th>Risco</th>
+            </tr>
+          </thead>
+          <tbody id="lista-atendimentos"></tbody>
+        </table>
       </div>
     </div>
   </main>
 
   <script>
+    const nomesStatus = {
+      AGUARDANDO_TRIAGEM: 'Aguardando triagem',
+      AGUARDANDO_CONSULTA: 'Aguardando consulta',
+      EM_CONSULTA: 'Em consulta',
+      FINALIZADO: 'Finalizado',
+      CANCELADO: 'Cancelado'
+    };
+
     function pegarLista(chave) {
       const texto = localStorage.getItem(chave);
       if (texto == null) {
@@ -187,6 +237,56 @@
     function mostrarFila() {
       document.getElementById('btn-sair').classList.remove('escondido');
       mostrarTela('tela-fila');
+
+      const atendimentos = pegarLista('atendimentos');
+      const tabela = document.getElementById('lista-atendimentos');
+      tabela.innerHTML = '';
+
+      if (atendimentos.length == 0) {
+        tabela.innerHTML = '<tr><td colspan="3">Nenhum atendimento ainda.</td></tr>';
+      }
+
+      for (const atendimento of atendimentos) {
+        let risco = '-';
+        if (atendimento.risco != null) {
+          risco = '<span class="risco-' + atendimento.risco + '">' + atendimento.risco + '</span>';
+        }
+        tabela.innerHTML += '<tr>' +
+          '<td>' + atendimento.cpf + '</td>' +
+          '<td>' + nomesStatus[atendimento.status] + '</td>' +
+          '<td>' + risco + '</td>' +
+          '</tr>';
+      }
+    }
+
+    function abrirAtendimento() {
+      const cpf = document.getElementById('novo-cpf').value.replace(/\D/g, '');
+
+      if (cpf.length != 11) {
+        alert('CPF inválido: ' + cpf);
+        return;
+      }
+
+      const atendimentos = pegarLista('atendimentos');
+      for (const atendimento of atendimentos) {
+        if (atendimento.cpf == cpf && atendimento.status != 'FINALIZADO' && atendimento.status != 'CANCELADO') {
+          alert('Paciente já possui atendimento ativo.');
+          return;
+        }
+      }
+
+      atendimentos.push({
+        id: Date.now().toString(),
+        cpf: cpf,
+        status: 'AGUARDANDO_TRIAGEM',
+        risco: null,
+        medicoes: [],
+        prescricao: null,
+        motivoCancelamento: null
+      });
+      salvarLista('atendimentos', atendimentos);
+      document.getElementById('novo-cpf').value = '';
+      mostrarFila();
     }
 
     if (localStorage.getItem('usuarioLogado') != null) {
