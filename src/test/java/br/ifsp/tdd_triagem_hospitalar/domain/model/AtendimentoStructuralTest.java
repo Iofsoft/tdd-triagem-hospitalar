@@ -22,4 +22,12 @@ class AtendimentoStructuralTest {
 
         assertThat(sut.equals(sut)).isTrue();
     }
+
+    @Test
+    @DisplayName("Não deve ser igual a nulo")
+    void naoDeveSerIgualANulo() {
+        final Atendimento sut = new Atendimento(id, cpf, StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of());
+
+        assertThat(sut.equals(null)).isFalse();
+    }
 }
