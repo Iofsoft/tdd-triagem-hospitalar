@@ -30,4 +30,12 @@ class AtendimentoStructuralTest {
 
         assertThat(sut.equals(null)).isFalse();
     }
+
+    @Test
+    @DisplayName("Não deve ser igual a um objeto de outra classe")
+    void naoDeveSerIgualAUmObjetoDeOutraClasse() {
+        final Atendimento sut = new Atendimento(id, cpf, StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of());
+
+        assertThat(sut.equals(cpf)).isFalse();
+    }
 }
