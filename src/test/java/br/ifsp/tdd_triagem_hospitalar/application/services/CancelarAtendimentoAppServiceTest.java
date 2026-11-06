@@ -126,6 +126,26 @@ class CancelarAtendimentoAppServiceTest {
         }
 
 
+        @Test
+        @DisplayName("Não deve cancelar atendimento com motivo null")
+        void naoDeveCancelarAtendimentoComMotivoNull() {
+            var idAtendimento = UUID.randomUUID();
+            var atendimento = new Atendimento(
+                    idAtendimento,
+                    new Cpf("52998224725"),
+                    StatusAtendimento.EM_CONSULTA,
+                    ClassificacaoRisco.VERDE,
+                    List.of()
+            );
+
+            when(repositoryMock.buscarPorId(idAtendimento)).thenReturn(Optional.of(atendimento));
+
+            assertThatIllegalArgumentException().isThrownBy(() -> {
+                service.cancelarAtendimento(idAtendimento, null);
+            });
+
+            verify(repositoryMock, never()).salvar(any(Atendimento.class));
+        }
 
 
     }
