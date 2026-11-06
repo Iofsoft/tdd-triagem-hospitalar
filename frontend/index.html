@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Triagem Hospitalar</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      background-color: #f4f4f4;
+      color: #222;
+    }
+
+    header {
+      background-color: #ffd60a;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    header button {
+      margin-top: 0;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 0 15px;
+    }
+
+    .caixa {
+      background-color: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    button {
+      margin-top: 12px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      background-color: #222;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #444;
+    }
+
+    .escondido {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Triagem Hospitalar</h1>
+    <button id="btn-sair" class="escondido" onclick="sair()">Sair</button>
+  </header>
+
+  <main>
+    <div id="tela-login" class="caixa">
+      <h2>Entrar</h2>
+      <label for="login-email">E-mail</label>
+      <input id="login-email" type="email">
+      <label for="login-senha">Senha</label>
+      <input id="login-senha" type="password">
+      <button id="btn-entrar" onclick="entrar()">Entrar</button>
+      <p>Não tem conta? <a href="#" id="link-cadastro" onclick="mostrarTela('tela-cadastro')">Criar conta</a></p>
+    </div>
+
+    <div id="tela-cadastro" class="caixa escondido">
+      <h2>Criar conta</h2>
+      <label for="cadastro-nome">Nome</label>
+      <input id="cadastro-nome">
+      <label for="cadastro-sobrenome">Sobrenome</label>
+      <input id="cadastro-sobrenome">
+      <label for="cadastro-email">E-mail</label>
+      <input id="cadastro-email" type="email">
+      <label for="cadastro-senha">Senha</label>
+      <input id="cadastro-senha" type="password">
+      <button id="btn-cadastrar" onclick="cadastrar()">Criar conta</button>
+      <p>Já tem conta? <a href="#" id="link-login" onclick="mostrarTela('tela-login')">Entrar</a></p>
+    </div>
+
+    <div id="tela-fila" class="escondido">
+      <div class="caixa">
+        <h2>Atendimentos</h2>
+        <p>Nenhum atendimento ainda.</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function pegarLista(chave) {
+      const texto = localStorage.getItem(chave);
+      if (texto == null) {
+        return [];
+      }
+      return JSON.parse(texto);
+    }
+
+    function salvarLista(chave, lista) {
+      localStorage.setItem(chave, JSON.stringify(lista));
+    }
+
+    function mostrarTela(id) {
+      document.getElementById('tela-login').classList.add('escondido');
+      document.getElementById('tela-cadastro').classList.add('escondido');
+      document.getElementById('tela-fila').classList.add('escondido');
+      document.getElementById(id).classList.remove('escondido');
+    }
+
+    function cadastrar() {
+      const nome = document.getElementById('cadastro-nome').value;
+      const sobrenome = document.getElementById('cadastro-sobrenome').value;
+      const email = document.getElementById('cadastro-email').value;
+      const senha = document.getElementById('cadastro-senha').value;
+
+      if (nome == '' || sobrenome == '' || email == '' || senha == '') {
+        alert('Preencha todos os campos.');
+        return;
+      }
+
+      const usuarios = pegarLista('usuarios');
+      for (const usuario of usuarios) {
+        if (usuario.email == email) {
+          alert('Este e-mail já está cadastrado.');
+          return;
+        }
+      }
+
+      usuarios.push({ nome: nome, sobrenome: sobrenome, email: email, senha: senha });
+      salvarLista('usuarios', usuarios);
+      alert('Conta criada! Agora é só entrar.');
+      mostrarTela('tela-login');
+    }
+
+    function entrar() {
+      const email = document.getElementById('login-email').value;
+      const senha = document.getElementById('login-senha').value;
+
+      const usuarios = pegarLista('usuarios');
+      const usuario = usuarios.find(u => u.email == email && u.senha == senha);
+      if (usuario == undefined) {
+        alert('E-mail ou senha incorretos.');
+        return;
+      }
+
+      localStorage.setItem('usuarioLogado', email);
+      mostrarFila();
+    }
+
+    function sair() {
+      localStorage.removeItem('usuarioLogado');
+      document.getElementById('btn-sair').classList.add('escondido');
+      mostrarTela('tela-login');
+    }
+
+    function mostrarFila() {
+      document.getElementById('btn-sair').classList.remove('escondido');
+      mostrarTela('tela-fila');
+    }
+
+    if (localStorage.getItem('usuarioLogado') != null) {
+      mostrarFila();
+    }
+  </script>
+</body>
+</html>
