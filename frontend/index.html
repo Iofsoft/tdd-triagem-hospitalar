@@ -160,6 +160,27 @@
       font-weight: bold;
     }
 
+    #relogio {
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .atrasado {
+      color: #c62828;
+      font-weight: bold;
+    }
+
+    .aviso {
+      background: linear-gradient(90deg, #222, #3a3a3a);
+      color: #ffd60a;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+    }
+
     .escondido {
       display: none;
     }
@@ -174,10 +195,13 @@
         <p>Sistema de Triagem</p>
       </div>
     </div>
+    <span id="relogio"></span>
     <button id="btn-sair" class="escondido" onclick="sair()">Sair</button>
   </header>
 
   <main>
+    <div id="aviso" class="aviso escondido"></div>
+
     <div id="tela-login" class="caixa">
       <h2>Entrar</h2>
       <form onsubmit="entrar(); return false;">
@@ -224,6 +248,7 @@
               <th>CPF</th>
               <th>Status</th>
               <th>Risco</th>
+              <th>Espera</th>
               <th></th>
             </tr>
           </thead>
@@ -325,7 +350,60 @@
       CANCELADO: 'Cancelado'
     };
 
+    const tempoMaximo = {
+      VERMELHO: 0,
+      AMARELO: 60,
+      VERDE: 120
+    };
+
+    const prioridade = {
+      VERMELHO: 1,
+      AMARELO: 2,
+      VERDE: 3
+    };
+
     let atendimentoAtual = null;
+    let alertados = [];
+
+    function notificar(mensagem) {
+      const aviso = document.getElementById('aviso');
+      aviso.textContent = mensagem;
+      aviso.classList.remove('escondido');
+      new Audio('chamada.wav').play();
+      setTimeout(function () {
+        aviso.classList.add('escondido');
+      }, 6000);
+    }
+
+    function minutosEsperando(atendimento) {
+      if (atendimento.medicoes.length == 0) {
+        return 0;
+      }
+      const horaTriagem = new Date(atendimento.medicoes[0].dataHora.substring(0, 19));
+      return Math.floor((Date.now() - horaTriagem.getTime()) / 60000);
+    }
+
+    function textoEspera(atendimento) {
+      if (atendimento.status != 'AGUARDANDO_CONSULTA') {
+        return '-';
+      }
+      const minutos = minutosEsperando(atendimento);
+      const limite = tempoMaximo[atendimento.classificacaoRisco];
+      if (minutos >= limite) {
+        return '<span class="atrasado">' + minutos + ' min (limite ' + limite + ' min)</span>';
+      }
+      return minutos + ' min (limite ' + limite + ' min)';
+    }
+
+    function ordemNaFila(atendimento) {
+      if (atendimento.status == 'FINALIZADO' || atendimento.status == 'CANCELADO') {
+        return 10;
+      }
+      if (atendimento.classificacaoRisco == null) {
+        return 4;
+      }
+      return prioridade[atendimento.classificacaoRisco];
+    }
 
     async function chamarApi(metodo, caminho, corpo) {
       const opcoes = {
@@ -434,11 +512,12 @@
       document.getElementById('btn-sair').classList.remove('escondido');
       mostrarTela('tela-fila');
 
+      atendimentos.sort((a, b) => ordemNaFila(a) - ordemNaFila(b));
       const tabela = document.getElementById('lista-atendimentos');
       tabela.innerHTML = '';
 
       if (atendimentos.length == 0) {
-        tabela.innerHTML = '<tr><td colspan="4">Nenhum atendimento ainda.</td></tr>';
+        tabela.innerHTML = '<tr><td colspan="5">Nenhum atendimento ainda.</td></tr>';
       }
 
       for (const atendimento of atendimentos) {
@@ -450,6 +529,7 @@
           '<td>' + atendimento.cpf + '</td>' +
           '<td>' + nomesStatus[atendimento.status] + '</td>' +
           '<td>' + risco + '</td>' +
+          '<td>' + textoEspera(atendimento) + '</td>' +
           '<td><button onclick="abrirDetalhe(\'' + atendimento.id + '\')">Abrir</button></td>' +
           '</tr>';
       }
@@ -462,6 +542,7 @@
         await chamarApi('POST', '/atendimentos', { cpf: cpf });
         document.getElementById('novo-cpf').value = '';
         mostrarFila();
+        notificar('Novo atendimento aberto: CPF ' + cpf + '.');
       } catch (erro) {
         alert(erro.message);
       }
@@ -524,6 +605,7 @@
       try {
         await chamarApi('POST', '/atendimentos/' + atendimentoAtual.id + '/triagem', dados);
         abrirDetalhe(atendimentoAtual.id);
+        notificar('Triagem concluída: CPF ' + atendimentoAtual.cpf + ' aguardando consulta.');
       } catch (erro) {
         alert(erro.message);
       }
@@ -533,6 +615,7 @@
       try {
         await chamarApi('PATCH', '/atendimentos/' + atendimentoAtual.id + '/consulta');
         abrirDetalhe(atendimentoAtual.id);
+        notificar('Chamando o CPF ' + atendimentoAtual.cpf + ' para a consulta.');
       } catch (erro) {
         alert(erro.message);
       }
@@ -563,7 +646,9 @@
       try {
         await chamarApi('PATCH', '/atendimentos/' + atendimentoAtual.id + '/classificacao-risco', dados);
         document.getElementById('reclassificar-justificativa').value = '';
+        alertados = alertados.filter(id => id != atendimentoAtual.id);
         abrirDetalhe(atendimentoAtual.id);
+        notificar('Risco do CPF ' + atendimentoAtual.cpf + ' reclassificado para ' + dados.novaClassificacao + '.');
       } catch (erro) {
         alert(erro.message);
       }
@@ -584,6 +669,7 @@
       try {
         await chamarApi('PATCH', '/atendimentos/' + atendimentoAtual.id + '/finalizacao');
         abrirDetalhe(atendimentoAtual.id);
+        notificar('Atendimento do CPF ' + atendimentoAtual.cpf + ' finalizado.');
       } catch (erro) {
         alert(erro.message);
       }
@@ -596,14 +682,48 @@
         await chamarApi('PATCH', '/atendimentos/' + atendimentoAtual.id + '/cancelamento', dados);
         document.getElementById('cancelar-motivo').value = '';
         abrirDetalhe(atendimentoAtual.id);
+        notificar('Atendimento do CPF ' + atendimentoAtual.cpf + ' cancelado.');
       } catch (erro) {
         alert(erro.message);
+      }
+    }
+
+    function atualizarRelogio() {
+      document.getElementById('relogio').textContent = new Date().toLocaleTimeString('pt-BR');
+    }
+
+    async function verificarEsperas() {
+      if (localStorage.getItem('token') == null) {
+        return;
+      }
+
+      let atendimentos;
+      try {
+        atendimentos = await chamarApi('GET', '/atendimentos');
+      } catch (erro) {
+        return;
+      }
+
+      for (const atendimento of atendimentos) {
+        const atrasado = minutosEsperando(atendimento) >= tempoMaximo[atendimento.classificacaoRisco];
+        if (atendimento.status == 'AGUARDANDO_CONSULTA' && atrasado && !alertados.includes(atendimento.id)) {
+          alertados.push(atendimento.id);
+          notificar('Atenção: o CPF ' + atendimento.cpf + ' (risco ' + atendimento.classificacaoRisco + ') passou do tempo máximo de espera.');
+        }
+      }
+
+      if (!document.getElementById('tela-fila').classList.contains('escondido')) {
+        mostrarFila();
       }
     }
 
     if (localStorage.getItem('token') != null) {
       mostrarFila();
     }
+
+    atualizarRelogio();
+    setInterval(atualizarRelogio, 1000);
+    setInterval(verificarEsperas, 30000);
   </script>
 </body>
 </html>
