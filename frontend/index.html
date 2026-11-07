@@ -254,6 +254,8 @@
   </main>
 
   <script>
+    const API = 'http://localhost:8080/api/v1';
+
     const nomesStatus = {
       AGUARDANDO_TRIAGEM: 'Aguardando triagem',
       AGUARDANDO_CONSULTA: 'Aguardando consulta',
@@ -264,16 +266,45 @@
 
     let atendimentoAtual = null;
 
-    function pegarLista(chave) {
-      const texto = localStorage.getItem(chave);
-      if (texto == null) {
-        return [];
-      }
-      return JSON.parse(texto);
-    }
+    async function chamarApi(metodo, caminho, corpo) {
+      const opcoes = {
+        method: metodo,
+        headers: { 'Content-Type': 'application/json' }
+      };
 
-    function salvarLista(chave, lista) {
-      localStorage.setItem(chave, JSON.stringify(lista));
+      const token = localStorage.getItem('token');
+      if (token != null) {
+        opcoes.headers['Authorization'] = 'Bearer ' + token;
+      }
+      if (corpo != undefined) {
+        opcoes.body = JSON.stringify(corpo);
+      }
+
+      let resposta;
+      try {
+        resposta = await fetch(API + caminho, opcoes);
+      } catch (erro) {
+        throw new Error('Não foi possível conectar com o back-end. Ele está rodando?');
+      }
+
+      const texto = await resposta.text();
+      let dados = null;
+      if (texto != '') {
+        try {
+          dados = JSON.parse(texto);
+        } catch (erro) {
+          dados = null;
+        }
+      }
+
+      if (!resposta.ok) {
+        let mensagem = 'Erro ' + resposta.status;
+        if (dados != null && dados.message) {
+          mensagem = dados.message;
+        }
+        throw new Error(mensagem);
+      }
+      return dados;
     }
 
     function mostrarTela(id) {
@@ -284,57 +315,64 @@
       document.getElementById(id).classList.remove('escondido');
     }
 
-    function cadastrar() {
-      const nome = document.getElementById('cadastro-nome').value;
-      const sobrenome = document.getElementById('cadastro-sobrenome').value;
-      const email = document.getElementById('cadastro-email').value;
-      const senha = document.getElementById('cadastro-senha').value;
+    async function cadastrar() {
+      const dados = {
+        name: document.getElementById('cadastro-nome').value,
+        lastname: document.getElementById('cadastro-sobrenome').value,
+        email: document.getElementById('cadastro-email').value,
+        password: document.getElementById('cadastro-senha').value
+      };
 
-      if (nome == '' || sobrenome == '' || email == '' || senha == '') {
+      if (dados.name == '' || dados.lastname == '' || dados.email == '' || dados.password == '') {
         alert('Preencha todos os campos.');
         return;
       }
 
-      const usuarios = pegarLista('usuarios');
-      for (const usuario of usuarios) {
-        if (usuario.email == email) {
-          alert('Este e-mail já está cadastrado.');
-          return;
-        }
+      localStorage.removeItem('token');
+      try {
+        await chamarApi('POST', '/register', dados);
+        alert('Conta criada! Agora é só entrar.');
+        mostrarTela('tela-login');
+      } catch (erro) {
+        alert('Não foi possível criar a conta: ' + erro.message);
       }
-
-      usuarios.push({ nome: nome, sobrenome: sobrenome, email: email, senha: senha });
-      salvarLista('usuarios', usuarios);
-      alert('Conta criada! Agora é só entrar.');
-      mostrarTela('tela-login');
     }
 
-    function entrar() {
-      const email = document.getElementById('login-email').value;
-      const senha = document.getElementById('login-senha').value;
+    async function entrar() {
+      const dados = {
+        username: document.getElementById('login-email').value,
+        password: document.getElementById('login-senha').value
+      };
 
-      const usuarios = pegarLista('usuarios');
-      const usuario = usuarios.find(u => u.email == email && u.senha == senha);
-      if (usuario == undefined) {
+      localStorage.removeItem('token');
+      try {
+        const resposta = await chamarApi('POST', '/authenticate', dados);
+        localStorage.setItem('token', resposta.token);
+        mostrarFila();
+      } catch (erro) {
         alert('E-mail ou senha incorretos.');
-        return;
       }
-
-      localStorage.setItem('usuarioLogado', email);
-      mostrarFila();
     }
 
     function sair() {
-      localStorage.removeItem('usuarioLogado');
+      localStorage.removeItem('token');
       document.getElementById('btn-sair').classList.add('escondido');
       mostrarTela('tela-login');
     }
 
-    function mostrarFila() {
+    async function mostrarFila() {
+      let atendimentos;
+      try {
+        atendimentos = await chamarApi('GET', '/atendimentos');
+      } catch (erro) {
+        alert('Não foi possível carregar os atendimentos. Entre de novo.');
+        sair();
+        return;
+      }
+
       document.getElementById('btn-sair').classList.remove('escondido');
       mostrarTela('tela-fila');
 
-      const atendimentos = pegarLista('atendimentos');
       const tabela = document.getElementById('lista-atendimentos');
       tabela.innerHTML = '';
 
@@ -344,8 +382,8 @@
 
       for (const atendimento of atendimentos) {
         let risco = '-';
-        if (atendimento.risco != null) {
-          risco = '<span class="risco-' + atendimento.risco + '">' + atendimento.risco + '</span>';
+        if (atendimento.classificacaoRisco != null) {
+          risco = '<span class="risco-' + atendimento.classificacaoRisco + '">' + atendimento.classificacaoRisco + '</span>';
         }
         tabela.innerHTML += '<tr>' +
           '<td>' + atendimento.cpf + '</td>' +
@@ -356,44 +394,16 @@
       }
     }
 
-    function abrirAtendimento() {
-      const cpf = document.getElementById('novo-cpf').value.replace(/\D/g, '');
+    async function abrirAtendimento() {
+      const cpf = document.getElementById('novo-cpf').value;
 
-      if (cpf.length != 11) {
-        alert('CPF inválido: ' + cpf);
-        return;
+      try {
+        await chamarApi('POST', '/atendimentos', { cpf: cpf });
+        document.getElementById('novo-cpf').value = '';
+        mostrarFila();
+      } catch (erro) {
+        alert(erro.message);
       }
-
-      const atendimentos = pegarLista('atendimentos');
-      for (const atendimento of atendimentos) {
-        if (atendimento.cpf == cpf && atendimento.status != 'FINALIZADO' && atendimento.status != 'CANCELADO') {
-          alert('Paciente já possui atendimento ativo.');
-          return;
-        }
-      }
-
-      atendimentos.push({
-        id: Date.now().toString(),
-        cpf: cpf,
-        status: 'AGUARDANDO_TRIAGEM',
-        risco: null,
-        medicoes: [],
-        prescricao: null,
-        motivoCancelamento: null
-      });
-      salvarLista('atendimentos', atendimentos);
-      document.getElementById('novo-cpf').value = '';
-      mostrarFila();
-    }
-
-    function salvarAtendimento(atendimentoAlterado) {
-      const atendimentos = pegarLista('atendimentos');
-      for (let i = 0; i < atendimentos.length; i++) {
-        if (atendimentos[i].id == atendimentoAlterado.id) {
-          atendimentos[i] = atendimentoAlterado;
-        }
-      }
-      salvarLista('atendimentos', atendimentos);
     }
 
     function mostrarCaixa(id, mostrar) {
@@ -404,14 +414,23 @@
       }
     }
 
-    function abrirDetalhe(id) {
-      const atendimentos = pegarLista('atendimentos');
-      atendimentoAtual = atendimentos.find(a => a.id == id);
+    function formatarData(texto) {
+      return new Date(texto.substring(0, 19)).toLocaleString('pt-BR');
+    }
+
+    async function abrirDetalhe(id) {
+      try {
+        atendimentoAtual = await chamarApi('GET', '/atendimentos/' + id);
+      } catch (erro) {
+        alert(erro.message);
+        return;
+      }
+
       mostrarTela('tela-atendimento');
 
       document.getElementById('detalhe-cpf').textContent = 'CPF ' + atendimentoAtual.cpf;
       document.getElementById('detalhe-status').textContent = nomesStatus[atendimentoAtual.status];
-      document.getElementById('detalhe-risco').textContent = atendimentoAtual.risco || '-';
+      document.getElementById('detalhe-risco').textContent = atendimentoAtual.classificacaoRisco || '-';
       document.getElementById('detalhe-prescricao').textContent = atendimentoAtual.prescricao || '-';
       document.getElementById('detalhe-motivo').textContent = atendimentoAtual.motivoCancelamento || '-';
 
@@ -421,7 +440,7 @@
         lista.innerHTML = '<li>Nenhuma medição.</li>';
       }
       for (const medicao of atendimentoAtual.medicoes) {
-        lista.innerHTML += '<li>' + medicao.dataHora + ' - ' + medicao.temperatura + ' °C - ' + medicao.frequenciaCardiaca + ' bpm</li>';
+        lista.innerHTML += '<li>' + formatarData(medicao.dataHora) + ' - ' + medicao.temperatura + ' °C - ' + medicao.frequenciaCardiaca + ' bpm</li>';
       }
 
       const status = atendimentoAtual.status;
@@ -434,114 +453,94 @@
       mostrarCaixa('caixa-cancelar', aberto);
     }
 
-    function medicaoValida(temperatura, frequencia) {
-      if (isNaN(temperatura) || temperatura < 32 || temperatura > 43) {
-        alert('Temperatura fora da faixa permitida (32.0°C a 43.0°C).');
-        return false;
+    async function realizarTriagem() {
+      const dados = {
+        temperatura: Number(document.getElementById('triagem-temperatura').value.replace(',', '.')),
+        frequenciaCardiaca: Number(document.getElementById('triagem-frequencia').value),
+        classificacaoRisco: document.getElementById('triagem-risco').value || null
+      };
+
+      try {
+        await chamarApi('POST', '/atendimentos/' + atendimentoAtual.id + '/triagem', dados);
+        abrirDetalhe(atendimentoAtual.id);
+      } catch (erro) {
+        alert(erro.message);
       }
-      if (isNaN(frequencia) || frequencia < 20 || frequencia > 260) {
-        alert('Frequência cardíaca fora da faixa permitida (20 a 260 bpm).');
-        return false;
-      }
-      return true;
     }
 
-    function realizarTriagem() {
-      const temperatura = Number(document.getElementById('triagem-temperatura').value.replace(',', '.'));
-      const frequencia = Number(document.getElementById('triagem-frequencia').value);
-      const risco = document.getElementById('triagem-risco').value;
-
-      if (!medicaoValida(temperatura, frequencia)) {
-        return;
+    async function iniciarConsulta() {
+      try {
+        await chamarApi('PATCH', '/atendimentos/' + atendimentoAtual.id + '/consulta');
+        abrirDetalhe(atendimentoAtual.id);
+      } catch (erro) {
+        alert(erro.message);
       }
-      if (risco == '') {
-        alert('A classificação de risco é obrigatória para a triagem.');
-        return;
-      }
-
-      atendimentoAtual.medicoes.push({ temperatura: temperatura, frequenciaCardiaca: frequencia, dataHora: new Date().toLocaleString('pt-BR') });
-      atendimentoAtual.risco = risco;
-      atendimentoAtual.status = 'AGUARDANDO_CONSULTA';
-      salvarAtendimento(atendimentoAtual);
-      abrirDetalhe(atendimentoAtual.id);
     }
 
-    function iniciarConsulta() {
-      atendimentoAtual.status = 'EM_CONSULTA';
-      salvarAtendimento(atendimentoAtual);
-      abrirDetalhe(atendimentoAtual.id);
-    }
+    async function registrarMedicao() {
+      const dados = {
+        temperatura: Number(document.getElementById('medicao-temperatura').value.replace(',', '.')),
+        frequenciaCardiaca: Number(document.getElementById('medicao-frequencia').value)
+      };
 
-    function registrarMedicao() {
-      const temperatura = Number(document.getElementById('medicao-temperatura').value.replace(',', '.'));
-      const frequencia = Number(document.getElementById('medicao-frequencia').value);
-
-      if (!medicaoValida(temperatura, frequencia)) {
-        return;
+      try {
+        await chamarApi('POST', '/atendimentos/' + atendimentoAtual.id + '/medicoes', dados);
+        document.getElementById('medicao-temperatura').value = '';
+        document.getElementById('medicao-frequencia').value = '';
+        abrirDetalhe(atendimentoAtual.id);
+      } catch (erro) {
+        alert(erro.message);
       }
-
-      atendimentoAtual.medicoes.push({ temperatura: temperatura, frequenciaCardiaca: frequencia, dataHora: new Date().toLocaleString('pt-BR') });
-      salvarAtendimento(atendimentoAtual);
-      document.getElementById('medicao-temperatura').value = '';
-      document.getElementById('medicao-frequencia').value = '';
-      abrirDetalhe(atendimentoAtual.id);
     }
 
-    function reclassificarRisco() {
-      const risco = document.getElementById('reclassificar-risco').value;
-      const justificativa = document.getElementById('reclassificar-justificativa').value;
+    async function reclassificarRisco() {
+      const dados = {
+        novaClassificacao: document.getElementById('reclassificar-risco').value,
+        justificativa: document.getElementById('reclassificar-justificativa').value
+      };
 
-      if (justificativa.trim() == '') {
-        alert('A justificativa da reclassificação não pode ser vazia.');
-        return;
+      try {
+        await chamarApi('PATCH', '/atendimentos/' + atendimentoAtual.id + '/classificacao-risco', dados);
+        document.getElementById('reclassificar-justificativa').value = '';
+        abrirDetalhe(atendimentoAtual.id);
+      } catch (erro) {
+        alert(erro.message);
       }
-
-      atendimentoAtual.risco = risco;
-      salvarAtendimento(atendimentoAtual);
-      document.getElementById('reclassificar-justificativa').value = '';
-      abrirDetalhe(atendimentoAtual.id);
     }
 
-    function registrarPrescricao() {
-      const prescricao = document.getElementById('prescricao-texto').value;
+    async function registrarPrescricao() {
+      const dados = { prescricao: document.getElementById('prescricao-texto').value };
 
-      if (prescricao.trim() == '') {
-        alert('O texto da prescrição não pode ser vazio.');
-        return;
+      try {
+        await chamarApi('PATCH', '/atendimentos/' + atendimentoAtual.id + '/prescricao', dados);
+        abrirDetalhe(atendimentoAtual.id);
+      } catch (erro) {
+        alert(erro.message);
       }
-
-      atendimentoAtual.prescricao = prescricao;
-      salvarAtendimento(atendimentoAtual);
-      abrirDetalhe(atendimentoAtual.id);
     }
 
-    function finalizarAtendimento() {
-      if (atendimentoAtual.prescricao == null) {
-        alert('Atendimento não pode ser finalizado sem prescrição.');
-        return;
+    async function finalizarAtendimento() {
+      try {
+        await chamarApi('PATCH', '/atendimentos/' + atendimentoAtual.id + '/finalizacao');
+        abrirDetalhe(atendimentoAtual.id);
+      } catch (erro) {
+        alert(erro.message);
       }
-
-      atendimentoAtual.status = 'FINALIZADO';
-      salvarAtendimento(atendimentoAtual);
-      abrirDetalhe(atendimentoAtual.id);
     }
 
-    function cancelarAtendimento() {
-      const motivo = document.getElementById('cancelar-motivo').value;
+    async function cancelarAtendimento() {
+      const dados = { motivo: document.getElementById('cancelar-motivo').value };
 
-      if (motivo.trim() == '') {
-        alert('Motivo do cancelamento não pode ser vazio.');
-        return;
+      try {
+        await chamarApi('PATCH', '/atendimentos/' + atendimentoAtual.id + '/cancelamento', dados);
+        document.getElementById('cancelar-motivo').value = '';
+        abrirDetalhe(atendimentoAtual.id);
+      } catch (erro) {
+        alert(erro.message);
       }
-
-      atendimentoAtual.status = 'CANCELADO';
-      atendimentoAtual.motivoCancelamento = motivo;
-      salvarAtendimento(atendimentoAtual);
-      document.getElementById('cancelar-motivo').value = '';
-      abrirDetalhe(atendimentoAtual.id);
     }
 
-    if (localStorage.getItem('usuarioLogado') != null) {
+    if (localStorage.getItem('token') != null) {
       mostrarFila();
     }
   </script>
