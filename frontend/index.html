@@ -74,6 +74,23 @@
       background-color: #444;
     }
 
+    .botao-amarelo {
+      background-color: #ffd60a;
+      color: #222;
+    }
+
+    .botao-amarelo:hover {
+      background-color: #f0c800;
+    }
+
+    .botao-vermelho {
+      background-color: #c62828;
+    }
+
+    .botao-vermelho:hover {
+      background-color: #a31f1f;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -83,6 +100,10 @@
       text-align: left;
       padding: 10px;
       border-bottom: 1px solid #ddd;
+    }
+
+    td button {
+      margin-top: 0;
     }
 
     .risco-VERMELHO {
@@ -152,10 +173,82 @@
               <th>CPF</th>
               <th>Status</th>
               <th>Risco</th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="lista-atendimentos"></tbody>
         </table>
+      </div>
+    </div>
+
+    <div id="tela-atendimento" class="escondido">
+      <div class="caixa">
+        <button id="btn-voltar" class="botao-amarelo" onclick="mostrarFila()">Voltar</button>
+        <h2 id="detalhe-cpf"></h2>
+        <p>Status: <span id="detalhe-status"></span></p>
+        <p>Risco: <span id="detalhe-risco"></span></p>
+        <p>Prescrição: <span id="detalhe-prescricao"></span></p>
+        <p>Motivo do cancelamento: <span id="detalhe-motivo"></span></p>
+        <h3>Medições</h3>
+        <ul id="detalhe-medicoes"></ul>
+      </div>
+
+      <div id="caixa-triagem" class="caixa">
+        <h3>Triagem</h3>
+        <label for="triagem-temperatura">Temperatura (°C)</label>
+        <input id="triagem-temperatura">
+        <label for="triagem-frequencia">Frequência cardíaca (bpm)</label>
+        <input id="triagem-frequencia">
+        <label for="triagem-risco">Classificação de risco</label>
+        <select id="triagem-risco">
+          <option value="">Selecione</option>
+          <option value="VERMELHO">Vermelho - Emergência</option>
+          <option value="AMARELO">Amarelo - Urgente</option>
+          <option value="VERDE">Verde - Pouco urgente</option>
+        </select>
+        <button id="btn-triagem" onclick="realizarTriagem()">Realizar triagem</button>
+      </div>
+
+      <div id="caixa-consulta" class="caixa">
+        <h3>Consulta</h3>
+        <button id="btn-iniciar-consulta" onclick="iniciarConsulta()">Iniciar consulta</button>
+      </div>
+
+      <div id="caixa-medicao" class="caixa">
+        <h3>Nova medição</h3>
+        <label for="medicao-temperatura">Temperatura (°C)</label>
+        <input id="medicao-temperatura">
+        <label for="medicao-frequencia">Frequência cardíaca (bpm)</label>
+        <input id="medicao-frequencia">
+        <button id="btn-medicao" onclick="registrarMedicao()">Registrar medição</button>
+      </div>
+
+      <div id="caixa-risco" class="caixa">
+        <h3>Reclassificar risco</h3>
+        <label for="reclassificar-risco">Novo risco</label>
+        <select id="reclassificar-risco">
+          <option value="VERMELHO">Vermelho - Emergência</option>
+          <option value="AMARELO">Amarelo - Urgente</option>
+          <option value="VERDE">Verde - Pouco urgente</option>
+        </select>
+        <label for="reclassificar-justificativa">Justificativa</label>
+        <input id="reclassificar-justificativa">
+        <button id="btn-reclassificar" onclick="reclassificarRisco()">Reclassificar</button>
+      </div>
+
+      <div id="caixa-prescricao" class="caixa">
+        <h3>Prescrição</h3>
+        <label for="prescricao-texto">Conduta e prescrição</label>
+        <textarea id="prescricao-texto" rows="4"></textarea>
+        <button id="btn-prescricao" onclick="registrarPrescricao()">Registrar prescrição</button>
+        <button id="btn-finalizar" class="botao-amarelo" onclick="finalizarAtendimento()">Finalizar atendimento</button>
+      </div>
+
+      <div id="caixa-cancelar" class="caixa">
+        <h3>Cancelar atendimento</h3>
+        <label for="cancelar-motivo">Motivo</label>
+        <input id="cancelar-motivo">
+        <button id="btn-cancelar" class="botao-vermelho" onclick="cancelarAtendimento()">Cancelar atendimento</button>
       </div>
     </div>
   </main>
@@ -168,6 +261,8 @@
       FINALIZADO: 'Finalizado',
       CANCELADO: 'Cancelado'
     };
+
+    let atendimentoAtual = null;
 
     function pegarLista(chave) {
       const texto = localStorage.getItem(chave);
@@ -185,6 +280,7 @@
       document.getElementById('tela-login').classList.add('escondido');
       document.getElementById('tela-cadastro').classList.add('escondido');
       document.getElementById('tela-fila').classList.add('escondido');
+      document.getElementById('tela-atendimento').classList.add('escondido');
       document.getElementById(id).classList.remove('escondido');
     }
 
@@ -243,7 +339,7 @@
       tabela.innerHTML = '';
 
       if (atendimentos.length == 0) {
-        tabela.innerHTML = '<tr><td colspan="3">Nenhum atendimento ainda.</td></tr>';
+        tabela.innerHTML = '<tr><td colspan="4">Nenhum atendimento ainda.</td></tr>';
       }
 
       for (const atendimento of atendimentos) {
@@ -255,6 +351,7 @@
           '<td>' + atendimento.cpf + '</td>' +
           '<td>' + nomesStatus[atendimento.status] + '</td>' +
           '<td>' + risco + '</td>' +
+          '<td><button onclick="abrirDetalhe(\'' + atendimento.id + '\')">Abrir</button></td>' +
           '</tr>';
       }
     }
@@ -287,6 +384,161 @@
       salvarLista('atendimentos', atendimentos);
       document.getElementById('novo-cpf').value = '';
       mostrarFila();
+    }
+
+    function salvarAtendimento(atendimentoAlterado) {
+      const atendimentos = pegarLista('atendimentos');
+      for (let i = 0; i < atendimentos.length; i++) {
+        if (atendimentos[i].id == atendimentoAlterado.id) {
+          atendimentos[i] = atendimentoAlterado;
+        }
+      }
+      salvarLista('atendimentos', atendimentos);
+    }
+
+    function mostrarCaixa(id, mostrar) {
+      if (mostrar) {
+        document.getElementById(id).classList.remove('escondido');
+      } else {
+        document.getElementById(id).classList.add('escondido');
+      }
+    }
+
+    function abrirDetalhe(id) {
+      const atendimentos = pegarLista('atendimentos');
+      atendimentoAtual = atendimentos.find(a => a.id == id);
+      mostrarTela('tela-atendimento');
+
+      document.getElementById('detalhe-cpf').textContent = 'CPF ' + atendimentoAtual.cpf;
+      document.getElementById('detalhe-status').textContent = nomesStatus[atendimentoAtual.status];
+      document.getElementById('detalhe-risco').textContent = atendimentoAtual.risco || '-';
+      document.getElementById('detalhe-prescricao').textContent = atendimentoAtual.prescricao || '-';
+      document.getElementById('detalhe-motivo').textContent = atendimentoAtual.motivoCancelamento || '-';
+
+      const lista = document.getElementById('detalhe-medicoes');
+      lista.innerHTML = '';
+      if (atendimentoAtual.medicoes.length == 0) {
+        lista.innerHTML = '<li>Nenhuma medição.</li>';
+      }
+      for (const medicao of atendimentoAtual.medicoes) {
+        lista.innerHTML += '<li>' + medicao.dataHora + ' - ' + medicao.temperatura + ' °C - ' + medicao.frequenciaCardiaca + ' bpm</li>';
+      }
+
+      const status = atendimentoAtual.status;
+      const aberto = status != 'FINALIZADO' && status != 'CANCELADO';
+      mostrarCaixa('caixa-triagem', status == 'AGUARDANDO_TRIAGEM');
+      mostrarCaixa('caixa-consulta', status == 'AGUARDANDO_CONSULTA');
+      mostrarCaixa('caixa-medicao', aberto);
+      mostrarCaixa('caixa-risco', status == 'AGUARDANDO_CONSULTA' || status == 'EM_CONSULTA');
+      mostrarCaixa('caixa-prescricao', status == 'EM_CONSULTA');
+      mostrarCaixa('caixa-cancelar', aberto);
+    }
+
+    function medicaoValida(temperatura, frequencia) {
+      if (isNaN(temperatura) || temperatura < 32 || temperatura > 43) {
+        alert('Temperatura fora da faixa permitida (32.0°C a 43.0°C).');
+        return false;
+      }
+      if (isNaN(frequencia) || frequencia < 20 || frequencia > 260) {
+        alert('Frequência cardíaca fora da faixa permitida (20 a 260 bpm).');
+        return false;
+      }
+      return true;
+    }
+
+    function realizarTriagem() {
+      const temperatura = Number(document.getElementById('triagem-temperatura').value.replace(',', '.'));
+      const frequencia = Number(document.getElementById('triagem-frequencia').value);
+      const risco = document.getElementById('triagem-risco').value;
+
+      if (!medicaoValida(temperatura, frequencia)) {
+        return;
+      }
+      if (risco == '') {
+        alert('A classificação de risco é obrigatória para a triagem.');
+        return;
+      }
+
+      atendimentoAtual.medicoes.push({ temperatura: temperatura, frequenciaCardiaca: frequencia, dataHora: new Date().toLocaleString('pt-BR') });
+      atendimentoAtual.risco = risco;
+      atendimentoAtual.status = 'AGUARDANDO_CONSULTA';
+      salvarAtendimento(atendimentoAtual);
+      abrirDetalhe(atendimentoAtual.id);
+    }
+
+    function iniciarConsulta() {
+      atendimentoAtual.status = 'EM_CONSULTA';
+      salvarAtendimento(atendimentoAtual);
+      abrirDetalhe(atendimentoAtual.id);
+    }
+
+    function registrarMedicao() {
+      const temperatura = Number(document.getElementById('medicao-temperatura').value.replace(',', '.'));
+      const frequencia = Number(document.getElementById('medicao-frequencia').value);
+
+      if (!medicaoValida(temperatura, frequencia)) {
+        return;
+      }
+
+      atendimentoAtual.medicoes.push({ temperatura: temperatura, frequenciaCardiaca: frequencia, dataHora: new Date().toLocaleString('pt-BR') });
+      salvarAtendimento(atendimentoAtual);
+      document.getElementById('medicao-temperatura').value = '';
+      document.getElementById('medicao-frequencia').value = '';
+      abrirDetalhe(atendimentoAtual.id);
+    }
+
+    function reclassificarRisco() {
+      const risco = document.getElementById('reclassificar-risco').value;
+      const justificativa = document.getElementById('reclassificar-justificativa').value;
+
+      if (justificativa.trim() == '') {
+        alert('A justificativa da reclassificação não pode ser vazia.');
+        return;
+      }
+
+      atendimentoAtual.risco = risco;
+      salvarAtendimento(atendimentoAtual);
+      document.getElementById('reclassificar-justificativa').value = '';
+      abrirDetalhe(atendimentoAtual.id);
+    }
+
+    function registrarPrescricao() {
+      const prescricao = document.getElementById('prescricao-texto').value;
+
+      if (prescricao.trim() == '') {
+        alert('O texto da prescrição não pode ser vazio.');
+        return;
+      }
+
+      atendimentoAtual.prescricao = prescricao;
+      salvarAtendimento(atendimentoAtual);
+      abrirDetalhe(atendimentoAtual.id);
+    }
+
+    function finalizarAtendimento() {
+      if (atendimentoAtual.prescricao == null) {
+        alert('Atendimento não pode ser finalizado sem prescrição.');
+        return;
+      }
+
+      atendimentoAtual.status = 'FINALIZADO';
+      salvarAtendimento(atendimentoAtual);
+      abrirDetalhe(atendimentoAtual.id);
+    }
+
+    function cancelarAtendimento() {
+      const motivo = document.getElementById('cancelar-motivo').value;
+
+      if (motivo.trim() == '') {
+        alert('Motivo do cancelamento não pode ser vazio.');
+        return;
+      }
+
+      atendimentoAtual.status = 'CANCELADO';
+      atendimentoAtual.motivoCancelamento = motivo;
+      salvarAtendimento(atendimentoAtual);
+      document.getElementById('cancelar-motivo').value = '';
+      abrirDetalhe(atendimentoAtual.id);
     }
 
     if (localStorage.getItem('usuarioLogado') != null) {
