@@ -40,7 +40,7 @@ class AtendimentoStructuralTest {
     }
 
     @Test
-    @DisplayName("Deve ser igual a outro atendimento com o mesmo id")
+    @DisplayName("Deve ser igual a outro atendimento com o mesmo id e possuir mesmo hashCode")
     void deveSerIgualAOutroAtendimentoComOMesmoId() {
         final Atendimento sut = new Atendimento(id, cpf, StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of());
         final Atendimento outro = new Atendimento(id, cpf, StatusAtendimento.CANCELADO, null, List.of());
