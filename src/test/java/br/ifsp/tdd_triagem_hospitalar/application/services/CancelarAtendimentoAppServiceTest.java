@@ -149,4 +149,23 @@ class CancelarAtendimentoAppServiceTest {
 
 
     }
+
+    @Tag("Mutation")
+    @Nested
+    @DisplayName("Testes Mutantes")
+    class TestesMutantes{
+
+        @Test
+        @DisplayName("Deve retornar IllegalArgumentException quando id de atendimento não for encontrado")
+        void deveRetornarIllegalArgumentExceptionQuandoAtendimentoNaoForEncontrado(){
+            var idQueNaoExiste = UUID.randomUUID();
+
+            when(repositoryMock.buscarPorId(idQueNaoExiste)).thenReturn(Optional.empty());
+            assertThatIllegalArgumentException().isThrownBy(()->{
+               service.cancelarAtendimento(idQueNaoExiste, "motivo cancelamento");
+            }).withMessage("Atendimento não encontrado");
+
+            verify(repositoryMock, never()).salvar(any());
+        }
+    }
 }
