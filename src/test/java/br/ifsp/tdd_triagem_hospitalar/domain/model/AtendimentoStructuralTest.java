@@ -46,5 +46,15 @@ class AtendimentoStructuralTest {
         final Atendimento outro = new Atendimento(id, cpf, StatusAtendimento.CANCELADO, null, List.of());
 
         assertThat(sut.equals(outro)).isTrue();
+        assertThat(sut.hashCode()).isEqualTo(outro.hashCode());
+    }
+
+    @Test
+    @DisplayName("Não deve ser igual a outro atendimento com id diferente")
+    void naoDeveSerIgualAOutroAtendimentoComIdDiferente() {
+        final Atendimento sut = new Atendimento(id, cpf, StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of());
+        final Atendimento outro = new Atendimento(UUID.randomUUID(), cpf, StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of());
+
+        assertThat(sut.equals(outro)).isFalse();
     }
 }
