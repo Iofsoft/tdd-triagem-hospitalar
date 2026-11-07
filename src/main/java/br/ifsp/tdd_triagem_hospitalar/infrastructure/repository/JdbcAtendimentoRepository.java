@@ -70,6 +70,14 @@ public class JdbcAtendimentoRepository implements AtendimentoRepository {
     }
 
     @Override
+    public List<Atendimento> buscarTodos() {
+        final List<String> ids = jdbcTemplate.queryForList("SELECT id FROM atendimento", String.class);
+        return ids.stream()
+                .map(id -> buscarPorId(UUID.fromString(id)).orElseThrow())
+                .toList();
+    }
+
+    @Override
     public boolean existeAtendimentoAtivoPorCpf(Cpf cpf) {
         Integer count = jdbcTemplate.queryForObject(
                 "SELECT count(*) FROM atendimento where cpf = ? AND status NOT IN ('FINALIZADO', 'CANCELADO')",
