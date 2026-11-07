@@ -162,8 +162,16 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <targetClasses></targetClasses>
-                    <targetTests></targetTests>
+                    <useClasspathJar>true</useClasspathJar>
+                    <parseSurefireArgLine>false</parseSurefireArgLine>
+                    <targetClasses>
+                        <param>br.ifsp.tdd_triagem_hospitalar.domain.*</param>
+                        <param>br.ifsp.tdd_triagem_hospitalar.application.*</param>
+                    </targetClasses>
+                    <targetTests>
+                        <param>br.ifsp.tdd_triagem_hospitalar.domain.*</param>
+                        <param>br.ifsp.tdd_triagem_hospitalar.application.*</param>
+                    </targetTests>
                 </configuration>
             </plugin>
             <plugin>
