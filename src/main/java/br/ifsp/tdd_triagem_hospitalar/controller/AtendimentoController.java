@@ -4,6 +4,7 @@ import br.ifsp.tdd_triagem_hospitalar.application.services.*;
 import br.ifsp.tdd_triagem_hospitalar.domain.model.MedicaoSinaisVitais;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -26,6 +28,8 @@ public class AtendimentoController {
     private final RegistrarPrescricaoAppService registrarPrescricaoAppService;
     private final FinalizarAtendimentoAppService finalizarAtendimentoAppService;
     private final CancelarAtendimentoAppService cancelarAtendimentoAppService;
+    private final ListarAtendimentosAppService listarAtendimentosAppService;
+    private final BuscarAtendimentoAppService buscarAtendimentoAppService;
 
     public AtendimentoController(AbrirAtendimentoAppService abrirAtendimentoAppService,
                                  RealizarTriagemAppService realizarTriagemAppService,
@@ -34,7 +38,9 @@ public class AtendimentoController {
                                  ReclassificarRiscoAppService reclassificarRiscoAppService,
                                  RegistrarPrescricaoAppService registrarPrescricaoAppService,
                                  FinalizarAtendimentoAppService finalizarAtendimentoAppService,
-                                 CancelarAtendimentoAppService cancelarAtendimentoAppService) {
+                                 CancelarAtendimentoAppService cancelarAtendimentoAppService,
+                                 ListarAtendimentosAppService listarAtendimentosAppService,
+                                 BuscarAtendimentoAppService buscarAtendimentoAppService) {
         this.abrirAtendimentoAppService = abrirAtendimentoAppService;
         this.realizarTriagemAppService = realizarTriagemAppService;
         this.iniciarConsultaAppService = iniciarConsultaAppService;
@@ -43,6 +49,21 @@ public class AtendimentoController {
         this.registrarPrescricaoAppService = registrarPrescricaoAppService;
         this.finalizarAtendimentoAppService = finalizarAtendimentoAppService;
         this.cancelarAtendimentoAppService = cancelarAtendimentoAppService;
+        this.listarAtendimentosAppService = listarAtendimentosAppService;
+        this.buscarAtendimentoAppService = buscarAtendimentoAppService;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<AtendimentoResponse>> listarAtendimentos() {
+        final List<AtendimentoResponse> atendimentos = listarAtendimentosAppService.listarAtendimentos().stream()
+                .map(AtendimentoResponse::new)
+                .toList();
+        return ResponseEntity.ok(atendimentos);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<AtendimentoResponse> buscarAtendimento(@PathVariable UUID id) {
+        return ResponseEntity.ok(new AtendimentoResponse(buscarAtendimentoAppService.buscarAtendimento(id)));
     }
 
     @PostMapping
