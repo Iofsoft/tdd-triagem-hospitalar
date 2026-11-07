@@ -1,6 +1,8 @@
 package br.ifsp.tdd_triagem_hospitalar.application.services;
 
 import br.ifsp.tdd_triagem_hospitalar.domain.model.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,83 +19,107 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @Tag("UnitTest")
-@Tag("TDD")
 class RegistrarPrescricaoAppServiceTest {
 
     @Mock
     private AtendimentoRepository repositoryMock;
 
-    //service a ser testado com um repositorio falso
+
     @InjectMocks
     private RegistrarPrescricaoAppService service;
 
-    @Test
-    void deveRegistrarPrescricaoValidaDuranteConsulta(){
-        //UUID id, Cpf cpf, StatusAtendimento status, ClassificacaoRisco classificacaoRisco, List<MedicaoSinaisVitais> medicoes
-        var idAtendimento = UUID.randomUUID();
-        var atendimento = new Atendimento(
-                idAtendimento,
-                new Cpf("52998224725"),
-                StatusAtendimento.EM_CONSULTA,
-                ClassificacaoRisco.VERDE,
-                null);
+    @Tag("TDD")
+    @Nested
+    @DisplayName("Testes Unitários")
+    class TestesUnitarios{
 
-        //qnd o service procurar por este ID, devolv o atendimento criado acima
-        when(repositoryMock.buscarPorId(idAtendimento)).thenReturn(Optional.of(atendimento));
+        @Test
+        void deveRegistrarPrescricaoValidaDuranteConsulta(){
+            //UUID id, Cpf cpf, StatusAtendimento status, ClassificacaoRisco classificacaoRisco, List<MedicaoSinaisVitais> medicoes
+            var idAtendimento = UUID.randomUUID();
+            var atendimento = new Atendimento(
+                    idAtendimento,
+                    new Cpf("52998224725"),
+                    StatusAtendimento.EM_CONSULTA,
+                    ClassificacaoRisco.VERDE,
+                    null);
+
+            when(repositoryMock.buscarPorId(idAtendimento)).thenReturn(Optional.of(atendimento));
 
 
-        String conduta = "conduta Generica";
-        service.registrarPrescricao(idAtendimento, conduta);
+            String conduta = "conduta Generica";
+            service.registrarPrescricao(idAtendimento, conduta);
 
-        assertThat(atendimento.getPrescricao()).isEqualTo(conduta);
+            assertThat(atendimento.getPrescricao()).isEqualTo(conduta);
 
-        verify(repositoryMock).salvar(atendimento);
+            verify(repositoryMock).salvar(atendimento);
+        }
+
+        @Test
+        void naoDeveRegistrarPrescricaoForaDeConsulta(){
+            var idAtendimento = UUID.randomUUID();
+            var atendimento = new Atendimento(
+                    idAtendimento,
+                    new Cpf("52998224725"),
+                    StatusAtendimento.AGUARDANDO_CONSULTA,
+                    ClassificacaoRisco.VERDE,
+                    null);
+
+            String conduta = "conduta genérica";
+
+            when(repositoryMock.buscarPorId(idAtendimento)).thenReturn(Optional.of(atendimento));
+
+            assertThatIllegalStateException().isThrownBy(()->
+                    service.registrarPrescricao(idAtendimento,conduta));
+
+            verify(repositoryMock, never()).salvar(any(Atendimento.class));
+        }
+
+        @Test
+        void naoDeveRegistrarPrescricaoComTextoVazio(){
+            var idAtendimento = UUID.randomUUID();
+            var atendimento = new Atendimento(
+                    idAtendimento,
+                    new Cpf("52998224725"),
+                    StatusAtendimento.EM_CONSULTA,
+                    ClassificacaoRisco.VERDE,
+                    null);
+
+            when(repositoryMock.buscarPorId(idAtendimento)).thenReturn(Optional.of(atendimento));
+
+            assertThatIllegalArgumentException().isThrownBy(() ->{
+                service.registrarPrescricao(idAtendimento, "");
+            });
+
+            assertThatIllegalArgumentException().isThrownBy(() ->{
+                service.registrarPrescricao(idAtendimento, " ");
+            });
+
+            assertThatIllegalArgumentException().isThrownBy(() ->{
+                service.registrarPrescricao(idAtendimento, null);
+            });
+
+            verify(repositoryMock, never()).salvar(any(Atendimento.class));
+        }
     }
 
-    @Test
-    void naoDeveRegistrarPrescricaoForaDeConsulta(){
-        var idAtendimento = UUID.randomUUID();
-        var atendimento = new Atendimento(
-                idAtendimento,
-                new Cpf("52998224725"),
-                StatusAtendimento.AGUARDANDO_CONSULTA,
-                ClassificacaoRisco.VERDE,
-                null);
+    @Tag("Mutation")
+    @Nested
+    @DisplayName("Testes Mutantes")
+    class TestesMutantes{
 
-        String conduta = "conduta genérica";
+        @Test
+        @DisplayName("Deve retornar IllegalArgumentException quando id de atendimento não for encontrado")
+        void deveRetornarIllegalArgumentExceptionQuandoAtendimentoNaoForEncontrado(){
+            var idQueNaoExiste = UUID.randomUUID();
 
-        when(repositoryMock.buscarPorId(idAtendimento)).thenReturn(Optional.of(atendimento));
+            when(repositoryMock.buscarPorId(idQueNaoExiste)).thenReturn(Optional.empty());
+            assertThatIllegalArgumentException().isThrownBy(()->{
+                service.registrarPrescricao(idQueNaoExiste, "conduta generica");
+            }).withMessage("Atendimento não encontrado");
 
-        assertThatIllegalStateException().isThrownBy(()->
-                service.registrarPrescricao(idAtendimento,conduta));
+            verify(repositoryMock, never()).salvar(any());
 
-        verify(repositoryMock, never()).salvar(any(Atendimento.class));
-    }
-
-    @Test
-    void naoDeveRegistrarPrescricaoComTextoVazio(){
-        var idAtendimento = UUID.randomUUID();
-        var atendimento = new Atendimento(
-                idAtendimento,
-                new Cpf("52998224725"),
-                StatusAtendimento.EM_CONSULTA,
-                ClassificacaoRisco.VERDE,
-                null);
-
-        when(repositoryMock.buscarPorId(idAtendimento)).thenReturn(Optional.of(atendimento));
-
-        assertThatIllegalArgumentException().isThrownBy(() ->{
-            service.registrarPrescricao(idAtendimento, "");
-        });
-
-        assertThatIllegalArgumentException().isThrownBy(() ->{
-            service.registrarPrescricao(idAtendimento, " ");
-        });
-
-        assertThatIllegalArgumentException().isThrownBy(() ->{
-            service.registrarPrescricao(idAtendimento, null);
-        });
-
-        verify(repositoryMock, never()).salvar(any(Atendimento.class));
+        }
     }
 }
