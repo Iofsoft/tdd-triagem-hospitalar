@@ -3,6 +3,8 @@ package br.ifsp.tdd_triagem_hospitalar.domain.model;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import java.util.List;
 import java.util.UUID;
@@ -56,5 +58,19 @@ class AtendimentoStructuralTest {
         final Atendimento outro = new Atendimento(UUID.randomUUID(), cpf, StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of());
 
         assertThat(sut.equals(outro)).isFalse();
+    }
+
+
+    @ParameterizedTest
+    @EnumSource(value = StatusAtendimento.class, mode = EnumSource.Mode.EXCLUDE, names = {"EM_CONSULTA"})
+    @DisplayName("Não deve finalizar atendimento quando status não for em consulta")
+    void naoDeveFinalizarAtendimentoQuandoStatusNaoForEmConsulta(StatusAtendimento status) {
+        final Atendimento sut = new Atendimento(
+                id, cpf, status, ClassificacaoRisco.VERDE, List.of(), "Prescricao teste", null
+        );
+
+        assertThatIllegalStateException()
+                .isThrownBy(sut::finalizarAtendimento)
+                .withMessage("Atendimento deve possuir status EmConsulta para ser finalizado");
     }
 }
