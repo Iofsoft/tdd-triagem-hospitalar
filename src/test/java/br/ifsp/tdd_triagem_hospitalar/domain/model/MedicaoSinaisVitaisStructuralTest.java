@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 @Tag("UnitTest")
@@ -24,5 +25,21 @@ class MedicaoSinaisVitaisStructuralTest {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> new MedicaoSinaisVitais(id, 36.5, 80, dataFutura))
                 .withMessage("A data e hora da medição não pode ser no futuro.");
+    }
+
+
+    @Test
+    @DisplayName("Deve cobrir os branches de equals: reflexivo, nulo e tipo incompatível")
+    void deveCobrirBranchesDeEquals() {
+        final MedicaoSinaisVitais sut = new MedicaoSinaisVitais(id, 36.5, 80, agora);
+
+        // Branch 1: this == o
+        assertThat(sut.equals(sut)).isTrue();
+
+        // Branch 2: o == null
+        assertThat(sut.equals(null)).isFalse();
+
+        // Branch 3: getClass() != o.getClass()
+        assertThat(sut.equals("outroTipo")).isFalse();
     }
 }
