@@ -3,21 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Triagem Hospitalar</title>
+  <title>Hospital Vale do Sol - Triagem</title>
   <style>
     body {
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
       margin: 0;
-      background-color: #f4f4f4;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #fff6cc 0%, #f5f5f5 350px);
       color: #222;
     }
 
     header {
-      background-color: #ffd60a;
-      padding: 15px 30px;
+      background: linear-gradient(90deg, #ffd60a, #ffb703);
+      padding: 14px 30px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
     }
 
     header h1 {
@@ -29,6 +31,17 @@
       margin-top: 0;
     }
 
+    .marca {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .marca p {
+      margin: 0;
+      font-size: 13px;
+    }
+
     main {
       max-width: 900px;
       margin: 30px auto;
@@ -37,36 +50,54 @@
 
     .caixa {
       background-color: white;
-      padding: 20px;
+      padding: 24px;
       margin-bottom: 20px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
+      border-top: 4px solid #ffb703;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    }
+
+    .caixa h2, .caixa h3 {
+      margin-top: 0;
+    }
+
+    #tela-login, #tela-cadastro {
+      max-width: 420px;
+      margin: 40px auto;
     }
 
     label {
       display: block;
-      margin-top: 10px;
+      margin-top: 12px;
       font-weight: bold;
+      font-size: 14px;
     }
 
     input, select, textarea {
       width: 100%;
-      padding: 8px;
+      padding: 10px;
       margin-top: 5px;
       box-sizing: border-box;
       border: 1px solid #ccc;
-      border-radius: 4px;
+      border-radius: 6px;
       font-size: 14px;
     }
 
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #ffb703;
+      box-shadow: 0 0 0 3px rgba(255, 183, 3, 0.3);
+    }
+
     button {
-      margin-top: 12px;
-      padding: 8px 16px;
+      margin-top: 14px;
+      padding: 10px 18px;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       background-color: #222;
       color: white;
       font-size: 14px;
+      font-weight: bold;
       cursor: pointer;
     }
 
@@ -75,12 +106,12 @@
     }
 
     .botao-amarelo {
-      background-color: #ffd60a;
+      background: linear-gradient(90deg, #ffd60a, #ffb703);
       color: #222;
     }
 
     .botao-amarelo:hover {
-      background-color: #f0c800;
+      background: linear-gradient(90deg, #ffcc00, #ffa500);
     }
 
     .botao-vermelho {
@@ -96,10 +127,18 @@
       border-collapse: collapse;
     }
 
+    th {
+      background-color: #fff3c4;
+    }
+
     th, td {
       text-align: left;
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
+      padding: 12px 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    tbody tr:hover {
+      background-color: #fffbea;
     }
 
     td button {
@@ -128,41 +167,53 @@
 </head>
 <body>
   <header>
-    <h1>Triagem Hospitalar</h1>
+    <div class="marca">
+      <img src="logo.svg" alt="Logo do Hospital Vale do Sol" width="44" height="44">
+      <div>
+        <h1>Hospital Vale do Sol</h1>
+        <p>Sistema de Triagem</p>
+      </div>
+    </div>
     <button id="btn-sair" class="escondido" onclick="sair()">Sair</button>
   </header>
 
   <main>
     <div id="tela-login" class="caixa">
       <h2>Entrar</h2>
-      <label for="login-email">E-mail</label>
-      <input id="login-email" type="email">
-      <label for="login-senha">Senha</label>
-      <input id="login-senha" type="password">
-      <button id="btn-entrar" onclick="entrar()">Entrar</button>
+      <form onsubmit="entrar(); return false;">
+        <label for="login-email">E-mail</label>
+        <input id="login-email" type="email">
+        <label for="login-senha">Senha</label>
+        <input id="login-senha" type="password">
+        <button id="btn-entrar" class="botao-amarelo">Entrar</button>
+      </form>
       <p>Não tem conta? <a href="#" id="link-cadastro" onclick="mostrarTela('tela-cadastro')">Criar conta</a></p>
     </div>
 
     <div id="tela-cadastro" class="caixa escondido">
       <h2>Criar conta</h2>
-      <label for="cadastro-nome">Nome</label>
-      <input id="cadastro-nome">
-      <label for="cadastro-sobrenome">Sobrenome</label>
-      <input id="cadastro-sobrenome">
-      <label for="cadastro-email">E-mail</label>
-      <input id="cadastro-email" type="email">
-      <label for="cadastro-senha">Senha</label>
-      <input id="cadastro-senha" type="password">
-      <button id="btn-cadastrar" onclick="cadastrar()">Criar conta</button>
+      <form onsubmit="cadastrar(); return false;">
+        <label for="cadastro-nome">Nome</label>
+        <input id="cadastro-nome">
+        <label for="cadastro-sobrenome">Sobrenome</label>
+        <input id="cadastro-sobrenome">
+        <label for="cadastro-email">E-mail</label>
+        <input id="cadastro-email" type="email">
+        <label for="cadastro-senha">Senha</label>
+        <input id="cadastro-senha" type="password">
+        <button id="btn-cadastrar" class="botao-amarelo">Criar conta</button>
+      </form>
       <p>Já tem conta? <a href="#" id="link-login" onclick="mostrarTela('tela-login')">Entrar</a></p>
     </div>
 
     <div id="tela-fila" class="escondido">
       <div class="caixa">
         <h2>Novo atendimento</h2>
-        <label for="novo-cpf">CPF do paciente</label>
-        <input id="novo-cpf" placeholder="Somente números">
-        <button id="btn-abrir-atendimento" onclick="abrirAtendimento()">Abrir atendimento</button>
+        <form onsubmit="abrirAtendimento(); return false;">
+          <label for="novo-cpf">CPF do paciente</label>
+          <input id="novo-cpf" placeholder="Somente números">
+          <button id="btn-abrir-atendimento" class="botao-amarelo">Abrir atendimento</button>
+        </form>
       </div>
 
       <div class="caixa">
@@ -195,18 +246,20 @@
 
       <div id="caixa-triagem" class="caixa">
         <h3>Triagem</h3>
-        <label for="triagem-temperatura">Temperatura (°C)</label>
-        <input id="triagem-temperatura">
-        <label for="triagem-frequencia">Frequência cardíaca (bpm)</label>
-        <input id="triagem-frequencia">
-        <label for="triagem-risco">Classificação de risco</label>
-        <select id="triagem-risco">
-          <option value="">Selecione</option>
-          <option value="VERMELHO">Vermelho - Emergência</option>
-          <option value="AMARELO">Amarelo - Urgente</option>
-          <option value="VERDE">Verde - Pouco urgente</option>
-        </select>
-        <button id="btn-triagem" onclick="realizarTriagem()">Realizar triagem</button>
+        <form onsubmit="realizarTriagem(); return false;">
+          <label for="triagem-temperatura">Temperatura (°C)</label>
+          <input id="triagem-temperatura">
+          <label for="triagem-frequencia">Frequência cardíaca (bpm)</label>
+          <input id="triagem-frequencia">
+          <label for="triagem-risco">Classificação de risco</label>
+          <select id="triagem-risco">
+            <option value="">Selecione</option>
+            <option value="VERMELHO">Vermelho - Emergência</option>
+            <option value="AMARELO">Amarelo - Urgente</option>
+            <option value="VERDE">Verde - Pouco urgente</option>
+          </select>
+          <button id="btn-triagem">Realizar triagem</button>
+        </form>
       </div>
 
       <div id="caixa-consulta" class="caixa">
@@ -216,39 +269,47 @@
 
       <div id="caixa-medicao" class="caixa">
         <h3>Nova medição</h3>
-        <label for="medicao-temperatura">Temperatura (°C)</label>
-        <input id="medicao-temperatura">
-        <label for="medicao-frequencia">Frequência cardíaca (bpm)</label>
-        <input id="medicao-frequencia">
-        <button id="btn-medicao" onclick="registrarMedicao()">Registrar medição</button>
+        <form onsubmit="registrarMedicao(); return false;">
+          <label for="medicao-temperatura">Temperatura (°C)</label>
+          <input id="medicao-temperatura">
+          <label for="medicao-frequencia">Frequência cardíaca (bpm)</label>
+          <input id="medicao-frequencia">
+          <button id="btn-medicao">Registrar medição</button>
+        </form>
       </div>
 
       <div id="caixa-risco" class="caixa">
         <h3>Reclassificar risco</h3>
-        <label for="reclassificar-risco">Novo risco</label>
-        <select id="reclassificar-risco">
-          <option value="VERMELHO">Vermelho - Emergência</option>
-          <option value="AMARELO">Amarelo - Urgente</option>
-          <option value="VERDE">Verde - Pouco urgente</option>
-        </select>
-        <label for="reclassificar-justificativa">Justificativa</label>
-        <input id="reclassificar-justificativa">
-        <button id="btn-reclassificar" onclick="reclassificarRisco()">Reclassificar</button>
+        <form onsubmit="reclassificarRisco(); return false;">
+          <label for="reclassificar-risco">Novo risco</label>
+          <select id="reclassificar-risco">
+            <option value="VERMELHO">Vermelho - Emergência</option>
+            <option value="AMARELO">Amarelo - Urgente</option>
+            <option value="VERDE">Verde - Pouco urgente</option>
+          </select>
+          <label for="reclassificar-justificativa">Justificativa</label>
+          <input id="reclassificar-justificativa">
+          <button id="btn-reclassificar">Reclassificar</button>
+        </form>
       </div>
 
       <div id="caixa-prescricao" class="caixa">
         <h3>Prescrição</h3>
-        <label for="prescricao-texto">Conduta e prescrição</label>
-        <textarea id="prescricao-texto" rows="4"></textarea>
-        <button id="btn-prescricao" onclick="registrarPrescricao()">Registrar prescrição</button>
-        <button id="btn-finalizar" class="botao-amarelo" onclick="finalizarAtendimento()">Finalizar atendimento</button>
+        <form onsubmit="registrarPrescricao(); return false;">
+          <label for="prescricao-texto">Conduta e prescrição</label>
+          <textarea id="prescricao-texto" rows="4"></textarea>
+          <button id="btn-prescricao">Registrar prescrição</button>
+          <button id="btn-finalizar" type="button" class="botao-amarelo" onclick="finalizarAtendimento()">Finalizar atendimento</button>
+        </form>
       </div>
 
       <div id="caixa-cancelar" class="caixa">
         <h3>Cancelar atendimento</h3>
-        <label for="cancelar-motivo">Motivo</label>
-        <input id="cancelar-motivo">
-        <button id="btn-cancelar" class="botao-vermelho" onclick="cancelarAtendimento()">Cancelar atendimento</button>
+        <form onsubmit="cancelarAtendimento(); return false;">
+          <label for="cancelar-motivo">Motivo</label>
+          <input id="cancelar-motivo">
+          <button id="btn-cancelar" class="botao-vermelho">Cancelar atendimento</button>
+        </form>
       </div>
     </div>
   </main>
