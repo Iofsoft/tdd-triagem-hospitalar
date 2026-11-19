@@ -22,6 +22,11 @@ public class CadastroPage {
     }
 
 
+    public String cadastrarComCamposVazios() {
+        driver.findElement(By.id("btn-cadastrar")).click();
+        return driver.switchTo().alert().getText();
+    }
+
     public void preencherCadastro(String nome, String sobrenome, String email, String senha) {
         driver.findElement(By.id("cadastro-nome")).sendKeys(nome);
         driver.findElement(By.id("cadastro-sobrenome")).sendKeys(sobrenome);
