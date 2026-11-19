@@ -9,6 +9,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.openqa.selenium.By;
 
 @Tag("UiTest")
 class NavegacaoLoginCadastroUiTest{
@@ -50,10 +51,19 @@ class NavegacaoLoginCadastroUiTest{
     }
 
     @Test
-    void deveMostrarAlertaQuandoLoginEhInvalido() {
+    void deveMostrarAlertaQuandoLoginEhInvalido(){
         LoginPage login = new LoginPage(driver);
 
         String mensagem = login.tentarLogin("invalido@example.com", "senha-incorreta");
         assertEquals("E-mail ou senha incorretos.", mensagem);
+    }
+
+    @Test
+    void deveManterLoginVisivelEmTelaEstreita(){
+        driver.manage().window().setSize(new org.openqa.selenium.Dimension(375, 812));
+        LoginPage login = new LoginPage(driver);
+
+        assertTrue(login.estaAberta());
+        assertTrue(driver.findElement(By.id("btn-entrar")).isDisplayed());
     }
 }
