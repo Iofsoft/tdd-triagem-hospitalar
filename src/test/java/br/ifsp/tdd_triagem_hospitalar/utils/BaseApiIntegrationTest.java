@@ -20,7 +20,7 @@ import static io.restassured.RestAssured.given;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class BaseApiIntegrationTest {
+public class BaseApiIntegrationTest {
     @LocalServerPort
     protected int port = 8080;
     @Autowired
