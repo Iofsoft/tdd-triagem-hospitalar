@@ -10,11 +10,19 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.openqa.selenium.By;
+import com.github.javafaker.Faker;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.Duration;
+import java.util.UUID;
 
 @Tag("UiTest")
 class NavegacaoLoginCadastroUiTest{
 
     private WebDriver driver;
+    private final Faker faker = new Faker();
+
     @BeforeEach
     void iniciarNavegador(){
         ChromeOptions options = new ChromeOptions();
@@ -66,4 +74,30 @@ class NavegacaoLoginCadastroUiTest{
         assertTrue(login.estaAberta());
         assertTrue(driver.findElement(By.id("btn-entrar")).isDisplayed());
     }
+
+    @Test
+    void deveCadastrarUsuarioComDadosValidos() {
+        String nome = faker.name().firstName();
+        String sobrenome = faker.name().lastName();
+        String email = "ui-" + UUID.randomUUID() + "@example.com";
+        String senha = faker.internet().password(10, 16);
+
+        CadastroPage cadastro = new LoginPage(driver).abrirCadastro();
+        cadastro.preencherCadastro(nome, sobrenome, email, senha);
+        cadastro.clicarCriarConta();
+
+
+
+        new WebDriverWait(driver, Duration.ofSeconds(5))
+                .until(ExpectedConditions.alertIsPresent());
+
+
+        String mensagem = driver.switchTo().alert().getText();
+        driver.switchTo().alert().accept();
+
+        assertEquals("Conta criada! Agora é só entrar.",  mensagem);
+        assertTrue(new LoginPage(driver).estaAberta());
+
+    }
+
 }
