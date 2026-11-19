@@ -48,4 +48,12 @@ class NavegacaoLoginCadastroUiTest{
 
         assertEquals("Preencha todos os campos.", mensagem);
     }
+
+    @Test
+    void deveMostrarAlertaQuandoLoginEhInvalido() {
+        LoginPage login = new LoginPage(driver);
+
+        String mensagem = login.tentarLogin("invalido@example.com", "senha-incorreta");
+        assertEquals("E-mail ou senha incorretos.", mensagem);
+    }
 }
