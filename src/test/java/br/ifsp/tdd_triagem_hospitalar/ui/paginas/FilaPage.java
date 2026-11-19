@@ -8,9 +8,12 @@ public class FilaPage {
 
     private final WebDriver driver;
 
+
+
     public FilaPage(WebDriver driver){
         this.driver = driver;
     }
+
 
     public boolean estaAberta() {
         return driver.findElement(By.id("tela-fila")).isDisplayed();
@@ -18,6 +21,12 @@ public class FilaPage {
 
     public void preencherCpf(String cpf){
         driver.findElement(By.id("novo-cpf")).sendKeys(cpf);
+    }
+
+
+    public void abrirAtendimento(String cpf) {
+        driver.findElement(By.id("novo-cpf")).sendKeys(cpf);
+        driver.findElement(By.id("btn-abrir-atendimento")).click();
     }
 
     public void clicarAbrirAtendimento(){

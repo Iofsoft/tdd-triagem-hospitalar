@@ -108,4 +108,34 @@ class NavegacaoLoginCadastroUiTest{
         assertTrue(new FilaPage(driver).estaAberta());
     }
 
+
+
+    @Test
+    void deveAbrirAtendimentoNaFila() {
+        String nome = faker.name().firstName();
+        String sobrenome = faker.name().lastName();
+        String email = "ui-" + UUID.randomUUID() + "@example.com";
+        String senha = faker.internet().password(10, 16);
+        CadastroPage cadastro = new LoginPage(driver).abrirCadastro();
+        cadastro.preencherCadastro(nome, sobrenome, email, senha);
+        cadastro.clicarCriarConta();
+
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.alertIsPresent());
+        driver.switchTo().alert().accept();
+
+        LoginPage login = new LoginPage(driver);
+        login.preencherLogin(email, senha);
+        login.clicarEntrar();
+
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-fila")));
+
+        String cpf = "52998224725";
+        FilaPage fila = new FilaPage(driver);
+        fila.abrirAtendimento(cpf);
+
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBePresentInElementLocated(By.id("lista-atendimentos"), cpf));
+
+        assertTrue(fila.obterTextoDaFila().contains(cpf));
+    }
+
 }
