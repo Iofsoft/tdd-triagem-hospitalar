@@ -95,9 +95,17 @@ class NavegacaoLoginCadastroUiTest{
         String mensagem = driver.switchTo().alert().getText();
         driver.switchTo().alert().accept();
 
-        assertEquals("Conta criada! Agora é só entrar.",  mensagem);
-        assertTrue(new LoginPage(driver).estaAberta());
+        assertEquals("Conta criada! Agora é só entrar.", mensagem);
 
+        LoginPage login = new LoginPage(driver);
+        assertTrue(login.estaAberta());
+        login.preencherLogin(email, senha);
+        login.clicarEntrar();
+
+        new WebDriverWait(driver, Duration.ofSeconds(5))
+                .until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-fila")));
+
+        assertTrue(new FilaPage(driver).estaAberta());
     }
 
 }
