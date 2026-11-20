@@ -15,6 +15,7 @@ import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 
 public class AtendimentoControllerTest extends BaseApiIntegrationTest {
     private static final String CPF = "640.174.540-11";
@@ -57,5 +58,30 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
         final List<UUID> expectedIds = List.of(atendimento1.getId(), atendimento2.getId(), atendimento3.getId());
 
         assertThat(responseIds).containsExactlyInAnyOrderElementsOf(expectedIds);
+    }
+
+    @Test
+    @DisplayName("Should find attendance by id")
+    void shouldFindAttendanceById() {
+        final String plainTextPassword = "senha123";
+        final User user = registerUser(plainTextPassword);
+        final String token = authenticate(user.getEmail(), plainTextPassword);
+
+        final Atendimento atendimento = EntityBuilder.createAtendimento();
+
+        repository.salvar(atendimento);
+
+        given()
+                .contentType("application/json")
+                .port(port)
+                .header("Authorization", "Bearer " + token).
+                when()
+                .get("/api/v1/atendimentos/" + atendimento.getId()).
+                then()
+                .log().ifValidationFails(LogDetail.BODY)
+                .statusCode(200)
+                .body("id", equalTo(atendimento.getId().toString()))
+                .body("cpf", equalTo(atendimento.getCpf().valor()))
+                .body("status", equalTo("AGUARDANDO_TRIAGEM"));
     }
 }
