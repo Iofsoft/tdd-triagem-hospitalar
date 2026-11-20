@@ -5,11 +5,7 @@ import br.ifsp.tdd_triagem_hospitalar.domain.model.ClassificacaoRisco;
 import br.ifsp.tdd_triagem_hospitalar.domain.model.Cpf;
 import br.ifsp.tdd_triagem_hospitalar.domain.model.MedicaoSinaisVitais;
 import br.ifsp.tdd_triagem_hospitalar.domain.model.StatusAtendimento;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -53,81 +49,84 @@ class JdbcAtendimentoRepositoryTest {
         jdbcTemplate.update("DELETE FROM atendimento");
     }
 
+    @Nested
+    @DisplayName("Saving attendance tests")
+    class SaveTests {
+        @Test
+        @DisplayName("Should save attendance with all measurements")
+        void shouldSaveAttendanceWithAllMeasurements() {
+            UUID attendanceId = UUID.randomUUID();
 
-    @Test
-    @DisplayName("Should save attendance with all measurements")
-    void shouldSaveAttendanceWithAllMeasurements() {
-        UUID attendanceId = UUID.randomUUID();
+            MedicaoSinaisVitais firstMeasurement = new MedicaoSinaisVitais(UUID.randomUUID(), 36.5, 80, LocalDateTime.of(2026, 1, 10, 9, 0));
+            MedicaoSinaisVitais secondMeasurement = new MedicaoSinaisVitais(UUID.randomUUID(), 37.2, 92, LocalDateTime.of(2026, 1, 10, 9, 30));
 
-        MedicaoSinaisVitais firstMeasurement = new MedicaoSinaisVitais(UUID.randomUUID(), 36.5, 80, LocalDateTime.of(2026, 1, 10, 9, 0));
-        MedicaoSinaisVitais secondMeasurement = new MedicaoSinaisVitais(UUID.randomUUID(), 37.2, 92, LocalDateTime.of(2026, 1, 10, 9, 30));
+            Atendimento attendance = new Atendimento(attendanceId, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_CONSULTA, ClassificacaoRisco.AMARELO, List.of(firstMeasurement, secondMeasurement));
 
-        Atendimento attendance = new Atendimento(attendanceId, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_CONSULTA, ClassificacaoRisco.AMARELO, List.of(firstMeasurement, secondMeasurement));
+            sut.salvar(attendance);
 
-        sut.salvar(attendance);
+            List<Map<String, Object>> records = jdbcTemplate.queryForList("SELECT * FROM medicao WHERE atendimento_id = ? ORDER BY data_hora", attendanceId.toString());
 
-        List<Map<String, Object>> records = jdbcTemplate.queryForList("SELECT * FROM medicao WHERE atendimento_id = ? ORDER BY data_hora", attendanceId.toString());
+            assertThat(records).hasSize(2);
 
-        assertThat(records).hasSize(2);
+            assertSoftly(softly -> {
+                Map<String, Object> firstRecord = records.get(0);
 
-        assertSoftly(softly -> {
-            Map<String, Object> firstRecord = records.get(0);
+                softly.assertThat(firstRecord.get("id")).isEqualTo(firstMeasurement.getId().toString());
+                softly.assertThat(firstRecord.get("atendimento_id")).isEqualTo(attendanceId.toString());
+                softly.assertThat(((Number) firstRecord.get("temperatura")).doubleValue()).isEqualTo(36.5);
+                softly.assertThat(((Number) firstRecord.get("frequencia_cardiaca")).intValue()).isEqualTo(80);
+                softly.assertThat(firstRecord.get("data_hora")).isEqualTo(firstMeasurement.getDataHora().toString());
 
-            softly.assertThat(firstRecord.get("id")).isEqualTo(firstMeasurement.getId().toString());
-            softly.assertThat(firstRecord.get("atendimento_id")).isEqualTo(attendanceId.toString());
-            softly.assertThat(((Number) firstRecord.get("temperatura")).doubleValue()).isEqualTo(36.5);
-            softly.assertThat(((Number) firstRecord.get("frequencia_cardiaca")).intValue()).isEqualTo(80);
-            softly.assertThat(firstRecord.get("data_hora")).isEqualTo(firstMeasurement.getDataHora().toString());
+                Map<String, Object> secondRecord = records.get(1);
 
-            Map<String, Object> secondRecord = records.get(1);
+                softly.assertThat(secondRecord.get("id")).isEqualTo(secondMeasurement.getId().toString());
+                softly.assertThat(secondRecord.get("atendimento_id")).isEqualTo(attendanceId.toString());
+                softly.assertThat(((Number) secondRecord.get("temperatura")).doubleValue()).isEqualTo(37.2);
+                softly.assertThat(((Number) secondRecord.get("frequencia_cardiaca")).intValue()).isEqualTo(92);
+                softly.assertThat(secondRecord.get("data_hora")).isEqualTo(secondMeasurement.getDataHora().toString());
+            });
+        }
 
-            softly.assertThat(secondRecord.get("id")).isEqualTo(secondMeasurement.getId().toString());
-            softly.assertThat(secondRecord.get("atendimento_id")).isEqualTo(attendanceId.toString());
-            softly.assertThat(((Number) secondRecord.get("temperatura")).doubleValue()).isEqualTo(37.2);
-            softly.assertThat(((Number) secondRecord.get("frequencia_cardiaca")).intValue()).isEqualTo(92);
-            softly.assertThat(secondRecord.get("data_hora")).isEqualTo(secondMeasurement.getDataHora().toString());
-        });
-    }
+        @Test
+        @DisplayName("Should save attendance that doesnt has measurements")
+        void shouldSaveAttendanceThatDoesntHasMeasurements() {
+            UUID id = UUID.randomUUID();
+            Atendimento attendance = new Atendimento(id, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of());
+            sut.salvar(attendance);
 
-    @Test
-    @DisplayName("Should save attendance that doesnt has measurements")
-    void shouldSaveAttendanceThatDoesntHasMeasurements() {
-        UUID id = UUID.randomUUID();
-        Atendimento attendance = new Atendimento(id, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of());
-        sut.salvar(attendance);
+            Map<String, Object> record = jdbcTemplate.queryForMap("SELECT * FROM atendimento WHERE id = ?", id.toString());
 
-        Map<String, Object> record = jdbcTemplate.queryForMap("SELECT * FROM atendimento WHERE id = ?", id.toString());
+            Integer measurementCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM medicao WHERE atendimento_id = ?", Integer.class, id.toString());
 
-        Integer measurementCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM medicao WHERE atendimento_id = ?", Integer.class, id.toString());
+            assertSoftly(softly -> {
+                softly.assertThat(record.get("id")).isEqualTo(id.toString());
+                softly.assertThat(record.get("cpf")).isEqualTo(CPF_1);
+                softly.assertThat(record.get("status")).isEqualTo(StatusAtendimento.AGUARDANDO_TRIAGEM.name());
+                softly.assertThat(record.get("classificacao_risco")).isNull();
+                softly.assertThat(record.get("prescricao")).isNull();
+                softly.assertThat(record.get("motivo_cancelamento")).isNull();
+                softly.assertThat(measurementCount).isZero();
+            });
+        }
 
-        assertSoftly(softly -> {
-            softly.assertThat(record.get("id")).isEqualTo(id.toString());
-            softly.assertThat(record.get("cpf")).isEqualTo(CPF_1);
-            softly.assertThat(record.get("status")).isEqualTo(StatusAtendimento.AGUARDANDO_TRIAGEM.name());
-            softly.assertThat(record.get("classificacao_risco")).isNull();
-            softly.assertThat(record.get("prescricao")).isNull();
-            softly.assertThat(record.get("motivo_cancelamento")).isNull();
-            softly.assertThat(measurementCount).isZero();
-        });
-    }
+        @Test
+        @DisplayName("Should replace attendance without duplicating")
+        void shouldReplaceAttendanceWithoutDuplicating() {
+            UUID id = UUID.randomUUID();
+            Atendimento initialAttendance = new Atendimento(id, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of());
+            Atendimento updatedAttendance = new Atendimento(id, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_CONSULTA, ClassificacaoRisco.VERDE, List.of());
 
-    @Test
-    @DisplayName("Should replace attendance without duplicating")
-    void shouldReplaceAttendanceWithoutDuplicating() {
-        UUID id = UUID.randomUUID();
-        Atendimento initialAttendance = new Atendimento(id, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of());
-        Atendimento updatedAttendance = new Atendimento(id, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_CONSULTA, ClassificacaoRisco.VERDE, List.of());
+            sut.salvar(initialAttendance);
+            sut.salvar(updatedAttendance);
 
-        sut.salvar(initialAttendance);
-        sut.salvar(updatedAttendance);
+            Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM atendimento WHERE id = ?", Integer.class, id.toString());
+            Map<String, Object> record = jdbcTemplate.queryForMap("SELECT * FROM atendimento WHERE id = ?", id.toString());
 
-        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM atendimento WHERE id = ?", Integer.class, id.toString());
-        Map<String, Object> record = jdbcTemplate.queryForMap("SELECT * FROM atendimento WHERE id = ?", id.toString());
-
-        assertSoftly(softly -> {
-            softly.assertThat(count).isEqualTo(1);
-            softly.assertThat(record.get("status")).isEqualTo(StatusAtendimento.AGUARDANDO_CONSULTA.name());
-            softly.assertThat(record.get("classificacao_risco")).isEqualTo(ClassificacaoRisco.VERDE.name());
-        });
+            assertSoftly(softly -> {
+                softly.assertThat(count).isEqualTo(1);
+                softly.assertThat(record.get("status")).isEqualTo(StatusAtendimento.AGUARDANDO_CONSULTA.name());
+                softly.assertThat(record.get("classificacao_risco")).isEqualTo(ClassificacaoRisco.VERDE.name());
+            });
+        }
     }
 }
