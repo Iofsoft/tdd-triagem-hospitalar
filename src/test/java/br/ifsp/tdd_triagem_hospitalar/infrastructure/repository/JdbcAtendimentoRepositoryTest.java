@@ -111,4 +111,23 @@ class JdbcAtendimentoRepositoryTest {
         });
     }
 
+    @Test
+    @DisplayName("Should replace attendance without duplicating")
+    void shouldReplaceAttendanceWithoutDuplicating() {
+        UUID id = UUID.randomUUID();
+        Atendimento initialAttendance = new Atendimento(id, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of());
+        Atendimento updatedAttendance = new Atendimento(id, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_CONSULTA, ClassificacaoRisco.VERDE, List.of());
+
+        sut.salvar(initialAttendance);
+        sut.salvar(updatedAttendance);
+
+        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM atendimento WHERE id = ?", Integer.class, id.toString());
+        Map<String, Object> record = jdbcTemplate.queryForMap("SELECT * FROM atendimento WHERE id = ?", id.toString());
+
+        assertSoftly(softly -> {
+            softly.assertThat(count).isEqualTo(1);
+            softly.assertThat(record.get("status")).isEqualTo(StatusAtendimento.AGUARDANDO_CONSULTA.name());
+            softly.assertThat(record.get("classificacao_risco")).isEqualTo(ClassificacaoRisco.VERDE.name());
+        });
+    }
 }
