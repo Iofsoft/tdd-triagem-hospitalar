@@ -10,8 +10,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
+import java.util.UUID;
+
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class AtendimentoControllerTest extends BaseApiIntegrationTest {
     private static final String CPF = "640.174.540-11";
@@ -21,7 +24,6 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
     @Test
     @DisplayName("Should list all attendances")
     void shouldListAllAttendances() {
-
         final String plainTextPassword = "senha123";
         final User user = registerUser(plainTextPassword);
         final String token = authenticate(user.getEmail(), plainTextPassword);
@@ -34,15 +36,26 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
         repository.salvar(atendimento2);
         repository.salvar(atendimento3);
 
-        given()
-                .contentType("application/json")
-                .port(port)
-                .header("Authorization", "Bearer " + token).
-                when()
-                .get("/api/v1/atendimentos").
-                then()
-                .log().ifValidationFails(LogDetail.BODY)
-                .statusCode(200)
-                .body("size()", equalTo(3));
+        final List<AtendimentoResponse> response =
+                given()
+                        .contentType("application/json")
+                        .port(port)
+                        .header("Authorization", "Bearer " + token).
+                        when()
+                        .get("/api/v1/atendimentos").
+                        then()
+                        .log().ifValidationFails(LogDetail.BODY)
+                        .statusCode(200)
+                        .extract()
+                        .jsonPath()
+                        .getList("$", AtendimentoResponse.class);
+
+        final List<UUID> responseIds = response.stream()
+                .map(AtendimentoResponse::id)
+                .toList();
+
+        final List<UUID> expectedIds = List.of(atendimento1.getId(), atendimento2.getId(), atendimento3.getId());
+
+        assertThat(responseIds).containsExactlyInAnyOrderElementsOf(expectedIds);
     }
 }
