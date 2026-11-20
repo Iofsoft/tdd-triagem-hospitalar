@@ -172,4 +172,43 @@ class NavegacaoLoginCadastroUiTest{
         new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-atendimento")));
         assertTrue(driver.findElement(By.id("tela-atendimento")).isDisplayed());
     }
+
+    @Test
+    void deveVoltarDosDetalhesParaFila() {
+        String nome = faker.name().firstName();
+        String sobrenome = faker.name().lastName();
+        String email = "ui-" + UUID.randomUUID() + "@example.com";
+        String senha = faker.internet().password(10, 16);
+        String cpf = "39053344705";
+
+        CadastroPage cadastro = new LoginPage(driver).abrirCadastro();
+        cadastro.preencherCadastro(nome, sobrenome, email, senha);
+        cadastro.clicarCriarConta();
+
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.alertIsPresent());
+        driver.switchTo().alert().accept();
+
+        LoginPage login = new LoginPage(driver);
+        login.preencherLogin(email, senha);
+        login.clicarEntrar();
+
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-fila")));
+
+        FilaPage fila = new FilaPage(driver);
+        fila.abrirAtendimento(cpf);
+
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBePresentInElementLocated(By.id("lista-atendimentos"), cpf));
+
+        driver.findElement(By.xpath("//tr[td[normalize-space()='" + cpf + "']]//button")).click();
+
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-atendimento")));
+
+        driver.findElement(By.id("btn-voltar")).click();
+
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-fila")));
+
+        assertTrue(new FilaPage(driver).estaAberta());
+    }
+
+
 }
