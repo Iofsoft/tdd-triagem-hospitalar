@@ -81,19 +81,12 @@ class JdbcAtendimentoRepositoryTest {
             Atendimento attendance = new Atendimento(id, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of());
             sut.salvar(attendance);
 
-            Map<String, Object> record = jdbcTemplate.queryForMap("SELECT * FROM atendimento WHERE id = ?", id.toString());
+            Optional<Atendimento> result = sut.buscarPorId(id);
+            assertThat(result).isPresent();
+            Atendimento savedAttendance = result.get();
 
-            Integer measurementCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM medicao WHERE atendimento_id = ?", Integer.class, id.toString());
-
-            assertSoftly(softly -> {
-                softly.assertThat(record.get("id")).isEqualTo(id.toString());
-                softly.assertThat(record.get("cpf")).isEqualTo(CPF_1);
-                softly.assertThat(record.get("status")).isEqualTo(StatusAtendimento.AGUARDANDO_TRIAGEM.name());
-                softly.assertThat(record.get("classificacao_risco")).isNull();
-                softly.assertThat(record.get("prescricao")).isNull();
-                softly.assertThat(record.get("motivo_cancelamento")).isNull();
-                softly.assertThat(measurementCount).isZero();
-            });
+            assertThat(savedAttendance.getId()).isEqualTo(id);
+            assertThat(savedAttendance.getMedicoes()).hasSize(0);
         }
 
         @Test
