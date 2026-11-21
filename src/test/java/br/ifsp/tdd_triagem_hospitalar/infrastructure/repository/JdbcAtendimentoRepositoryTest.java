@@ -13,6 +13,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -64,27 +65,13 @@ class JdbcAtendimentoRepositoryTest {
 
             sut.salvar(attendance);
 
-            List<Map<String, Object>> records = jdbcTemplate.queryForList("SELECT * FROM medicao WHERE atendimento_id = ? ORDER BY data_hora", attendanceId.toString());
+            Optional<Atendimento> result = sut.buscarPorId(attendanceId);
 
-            assertThat(records).hasSize(2);
+            assertThat(result).isPresent();
+            Atendimento savedAttendance = result.get();
 
-            assertSoftly(softly -> {
-                Map<String, Object> firstRecord = records.get(0);
-
-                softly.assertThat(firstRecord.get("id")).isEqualTo(firstMeasurement.getId().toString());
-                softly.assertThat(firstRecord.get("atendimento_id")).isEqualTo(attendanceId.toString());
-                softly.assertThat(((Number) firstRecord.get("temperatura")).doubleValue()).isEqualTo(36.5);
-                softly.assertThat(((Number) firstRecord.get("frequencia_cardiaca")).intValue()).isEqualTo(80);
-                softly.assertThat(firstRecord.get("data_hora")).isEqualTo(firstMeasurement.getDataHora().toString());
-
-                Map<String, Object> secondRecord = records.get(1);
-
-                softly.assertThat(secondRecord.get("id")).isEqualTo(secondMeasurement.getId().toString());
-                softly.assertThat(secondRecord.get("atendimento_id")).isEqualTo(attendanceId.toString());
-                softly.assertThat(((Number) secondRecord.get("temperatura")).doubleValue()).isEqualTo(37.2);
-                softly.assertThat(((Number) secondRecord.get("frequencia_cardiaca")).intValue()).isEqualTo(92);
-                softly.assertThat(secondRecord.get("data_hora")).isEqualTo(secondMeasurement.getDataHora().toString());
-            });
+            assertThat(savedAttendance.getMedicoes()).hasSize(2);
+            assertThat(savedAttendance.getMedicoes()).containsExactly(firstMeasurement, secondMeasurement);
         }
 
         @Test
