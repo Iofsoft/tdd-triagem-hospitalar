@@ -127,5 +127,14 @@ class JdbcAtendimentoRepositoryTest {
             assertThat(attendance.getId()).isEqualTo(attendanceId);
         }
 
+        @Test
+        @DisplayName("Should return empty when attendance does not exist")
+        void shouldReturnEmptyWhenAttendanceDoesNotExist() {
+            Optional<Atendimento> result = sut.buscarPorId(UUID.randomUUID());
+
+            assertThat(result).isEmpty();
+        }
+
+
     }
 }
