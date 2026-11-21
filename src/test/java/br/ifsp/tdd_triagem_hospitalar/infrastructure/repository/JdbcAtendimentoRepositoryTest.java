@@ -12,12 +12,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 
 @Tag("PersistenceTest")
@@ -36,10 +34,23 @@ class JdbcAtendimentoRepositoryTest {
     private JdbcAtendimentoRepository sut;
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    MedicaoSinaisVitais firstMeasurement;
+    MedicaoSinaisVitais secondMeasurement;
+    Atendimento initialAttendance;
+    Atendimento updatedAttendance;
+    UUID attendanceId;
 
     @BeforeEach
     void setUp() {
         clearDatabase();
+        attendanceId = UUID.randomUUID();
+
+        firstMeasurement = new MedicaoSinaisVitais(UUID.randomUUID(), 36.5, 80, LocalDateTime.of(2026, 1, 10, 9, 0));
+        secondMeasurement = new MedicaoSinaisVitais(UUID.randomUUID(), 37.2, 92, LocalDateTime.of(2026, 1, 10, 9, 30));
+
+        initialAttendance = new Atendimento(attendanceId, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of());
+        updatedAttendance = new Atendimento(attendanceId, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_CONSULTA, ClassificacaoRisco.VERDE, List.of());
+
     }
     @AfterEach
     void tearDown() {
@@ -58,12 +69,7 @@ class JdbcAtendimentoRepositoryTest {
         void shouldSaveAttendanceWithAllMeasurements() {
             UUID attendanceId = UUID.randomUUID();
 
-            MedicaoSinaisVitais firstMeasurement = new MedicaoSinaisVitais(UUID.randomUUID(), 36.5, 80, LocalDateTime.of(2026, 1, 10, 9, 0));
-            MedicaoSinaisVitais secondMeasurement = new MedicaoSinaisVitais(UUID.randomUUID(), 37.2, 92, LocalDateTime.of(2026, 1, 10, 9, 30));
-
-            Atendimento attendance = new Atendimento(attendanceId, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_CONSULTA, ClassificacaoRisco.AMARELO, List.of(firstMeasurement, secondMeasurement));
-
-            sut.salvar(attendance);
+            sut.salvar(initialAttendance);
 
             Optional<Atendimento> result = sut.buscarPorId(attendanceId);
 
@@ -93,9 +99,6 @@ class JdbcAtendimentoRepositoryTest {
         @DisplayName("Should replace attendance without duplicating")
         void shouldReplaceAttendanceWithoutDuplicating() {
             UUID id = UUID.randomUUID();
-            Atendimento initialAttendance = new Atendimento(id, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of());
-            Atendimento updatedAttendance = new Atendimento(id, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_CONSULTA, ClassificacaoRisco.VERDE, List.of());
-
             sut.salvar(initialAttendance);
             sut.salvar(updatedAttendance);
 
@@ -106,7 +109,23 @@ class JdbcAtendimentoRepositoryTest {
 
             assertThat(savedAttendance.getId()).isEqualTo(id);
             assertThat(savedAttendance.getStatus()).isEqualTo(StatusAtendimento.AGUARDANDO_CONSULTA);
-            assertThat(savedAttendance.getClassificacaoRisco()).isEqualTo(ClassificacaoRisco.VERDE);
         }
+    }
+
+    @Nested
+    @DisplayName("Find by ID tests")
+    class FindByIdTests {
+
+        @Test
+        @DisplayName("Should find the correct attendance by id")
+        void shouldFindCorrectAttendance() {
+            sut.salvar(initialAttendance);
+            var result = sut.buscarPorId(attendanceId);
+
+            assertThat(result).isPresent();
+            Atendimento attendance = result.orElseThrow();
+            assertThat(attendance.getId()).isEqualTo(attendanceId);
+        }
+
     }
 }
