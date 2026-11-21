@@ -99,14 +99,14 @@ class JdbcAtendimentoRepositoryTest {
             sut.salvar(initialAttendance);
             sut.salvar(updatedAttendance);
 
-            Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM atendimento WHERE id = ?", Integer.class, id.toString());
-            Map<String, Object> record = jdbcTemplate.queryForMap("SELECT * FROM atendimento WHERE id = ?", id.toString());
+            Optional<Atendimento> result = sut.buscarPorId(id);
 
-            assertSoftly(softly -> {
-                softly.assertThat(count).isEqualTo(1);
-                softly.assertThat(record.get("status")).isEqualTo(StatusAtendimento.AGUARDANDO_CONSULTA.name());
-                softly.assertThat(record.get("classificacao_risco")).isEqualTo(ClassificacaoRisco.VERDE.name());
-            });
+            assertThat(result).isPresent();
+            Atendimento savedAttendance = result.get();
+
+            assertThat(savedAttendance.getId()).isEqualTo(id);
+            assertThat(savedAttendance.getStatus()).isEqualTo(StatusAtendimento.AGUARDANDO_CONSULTA);
+            assertThat(savedAttendance.getClassificacaoRisco()).isEqualTo(ClassificacaoRisco.VERDE);
         }
     }
 }
