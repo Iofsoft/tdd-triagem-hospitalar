@@ -151,5 +151,23 @@ class JdbcAtendimentoRepositoryTest {
             assertThat(attendance.getMedicoes().get(0).getId()).isEqualTo(firstMeasurement.getId());
             assertThat(attendance.getMedicoes().get(0).getId()).isNotEqualTo(secondMeasurement.getId());
         }
+
+        @Test
+        @DisplayName("Should find the measurements in chronological order")
+        void shouldFindMeasurementsInChronologicalOrder() {
+            MedicaoSinaisVitais oldestMeasurement = new MedicaoSinaisVitais(UUID.randomUUID(), 36.4, 75, LocalDateTime.of(2026, 1, 10, 9, 0));
+            MedicaoSinaisVitais middleMeasurement = new MedicaoSinaisVitais(UUID.randomUUID(), 36.8, 82, LocalDateTime.of(2026, 1, 10, 10, 0));
+            MedicaoSinaisVitais newestMeasurement = new MedicaoSinaisVitais(UUID.randomUUID(), 37.0, 90, LocalDateTime.of(2026, 1, 10, 11, 0));
+
+            Atendimento attendanceWithMeasurements = new Atendimento(attendanceId, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_CONSULTA, ClassificacaoRisco.VERDE, List.of(newestMeasurement, oldestMeasurement, middleMeasurement));
+
+            sut.salvar(attendanceWithMeasurements);
+
+            Atendimento attendance = sut.buscarPorId(attendanceId).orElseThrow();
+
+            assertThat(attendance.getMedicoes().get(0).getId()).isEqualTo(oldestMeasurement.getId());
+            assertThat(attendance.getMedicoes().get(1).getId()).isEqualTo(middleMeasurement.getId());
+            assertThat(attendance.getMedicoes().get(2).getId()).isEqualTo(newestMeasurement.getId());
+        }
     }
 }
