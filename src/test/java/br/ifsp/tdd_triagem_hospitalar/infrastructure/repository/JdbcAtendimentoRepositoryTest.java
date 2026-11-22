@@ -250,6 +250,16 @@ class JdbcAtendimentoRepositoryTest {
             assertThat(result).isFalse();
         }
 
+        @Test
+        @DisplayName("Should return false when active attendance belongs to another CPF")
+        void shouldReturnFalseWhenActiveAttendanceBelongsToAnotherCpf() {
+            Atendimento anotherAttendance = new Atendimento(attendanceId, new Cpf("99819627087"),
+                    StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of());
+            sut.salvar(anotherAttendance);
+
+            boolean result = sut.existeAtendimentoAtivoPorCpf(new Cpf(CPF_1));
+            assertThat(result).isFalse();
+        }
     }
 
 }
