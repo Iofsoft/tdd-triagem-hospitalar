@@ -34,11 +34,11 @@ class JdbcAtendimentoRepositoryTest {
     private JdbcAtendimentoRepository sut;
     @Autowired
     private JdbcTemplate jdbcTemplate;
-    MedicaoSinaisVitais firstMeasurement;
-    MedicaoSinaisVitais secondMeasurement;
-    Atendimento initialAttendance;
-    Atendimento updatedAttendance;
-    UUID attendanceId;
+    private MedicaoSinaisVitais firstMeasurement;
+    private MedicaoSinaisVitais secondMeasurement;
+    private Atendimento initialAttendance;
+    private Atendimento updatedAttendance;
+    private UUID attendanceId;
 
     @BeforeEach
     void setUp() {
@@ -135,6 +135,21 @@ class JdbcAtendimentoRepositoryTest {
             assertThat(result).isEmpty();
         }
 
+        @Test
+        @DisplayName("Should not get measurements of another attendance")
+        void shouldNotGetMeasurementsOfAnotherAttendance() {
+            UUID secondAttendanceId = UUID.randomUUID();
 
+            Atendimento firstAttendance = new Atendimento(attendanceId, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_CONSULTA, ClassificacaoRisco.VERDE, List.of(firstMeasurement));
+            Atendimento secondAttendance = new Atendimento(secondAttendanceId, new Cpf("52998224725"), StatusAtendimento.AGUARDANDO_CONSULTA, ClassificacaoRisco.AMARELO, List.of(secondMeasurement));
+
+            sut.salvar(firstAttendance);
+            sut.salvar(secondAttendance);
+
+            Atendimento attendance = sut.buscarPorId(attendanceId).orElseThrow();
+
+            assertThat(attendance.getMedicoes().get(0).getId()).isEqualTo(firstMeasurement.getId());
+            assertThat(attendance.getMedicoes().get(0).getId()).isNotEqualTo(secondMeasurement.getId());
+        }
     }
 }
