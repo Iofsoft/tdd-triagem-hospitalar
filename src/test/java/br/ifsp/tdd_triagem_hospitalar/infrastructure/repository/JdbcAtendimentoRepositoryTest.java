@@ -6,6 +6,8 @@ import br.ifsp.tdd_triagem_hospitalar.domain.model.Cpf;
 import br.ifsp.tdd_triagem_hospitalar.domain.model.MedicaoSinaisVitais;
 import br.ifsp.tdd_triagem_hospitalar.domain.model.StatusAtendimento;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -201,6 +203,24 @@ class JdbcAtendimentoRepositoryTest {
             assertThatThrownBy(() -> sut.buscarTodos())
                     .isInstanceOf(InvalidDataAccessApiUsageException.class)
                     .hasRootCauseInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("Patient tests")
+    class PatientTests {
+        @Test
+        @DisplayName("Should return false when CPF has no attendance")
+        void shouldReturnFalseWhenCpfHasNoAttendance() {
+            boolean result = sut.existeAtendimentoAtivoPorCpf(new Cpf(CPF_1));
+
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        @DisplayName("Should throw exception when CPF is null")
+        void shouldThrowExceptionWhenCpfIsNull() {
+            assertThatThrownBy(() -> sut.existeAtendimentoAtivoPorCpf(null)).isInstanceOf(NullPointerException.class);
         }
     }
 }
