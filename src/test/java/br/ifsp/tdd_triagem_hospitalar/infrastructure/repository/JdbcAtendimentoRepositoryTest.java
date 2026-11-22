@@ -113,8 +113,8 @@ class JdbcAtendimentoRepositoryTest {
     }
 
     @Nested
-    @DisplayName("Find by ID tests")
-    class FindByIdTests {
+    @DisplayName("Find by ID and find all tests")
+    class FindingTests {
 
         @Test
         @DisplayName("Should find the correct attendance by id")
@@ -174,6 +174,21 @@ class JdbcAtendimentoRepositoryTest {
         @DisplayName("Should return empty list when there are no attendances")
         void shouldReturnEmptyListWhenThereAreNoAttendances() {
             assertThat(sut.buscarTodos()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Should find all persisted attendances")
+        void shouldFindAllPersistedAttendances() {
+            Atendimento anotherAttendance = new Atendimento(UUID.randomUUID(), new Cpf("99819627087"),
+                    StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of());
+            sut.salvar(initialAttendance);
+            sut.salvar(anotherAttendance);
+
+            List<Atendimento> attendances = sut.buscarTodos();
+
+            assertThat(attendances)
+                    .extracting(Atendimento::getId)
+                    .containsExactlyInAnyOrder(initialAttendance.getId(), anotherAttendance.getId());
         }
     }
 }
