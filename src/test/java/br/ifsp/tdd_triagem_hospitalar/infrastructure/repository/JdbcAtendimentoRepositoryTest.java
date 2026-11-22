@@ -234,5 +234,22 @@ class JdbcAtendimentoRepositoryTest {
 
             assertThat(exists).isTrue();
         }
+
+        @ParameterizedTest
+        @EnumSource(value = StatusAtendimento.class, names = {"FINALIZADO", "CANCELADO"})
+        @DisplayName("Should return false when CPF has no active attendance")
+        void shouldReturnFalseWhenCpfHasNoActiveAttendance(StatusAtendimento status) {
+            ClassificacaoRisco riskClassification = status == StatusAtendimento.FINALIZADO ? ClassificacaoRisco.VERDE : null;
+
+            Atendimento attendance = new Atendimento(attendanceId, new Cpf(CPF_1), status, riskClassification, List.of());
+
+            sut.salvar(attendance);
+
+            boolean result = sut.existeAtendimentoAtivoPorCpf(new Cpf(CPF_1));
+
+            assertThat(result).isFalse();
+        }
+
     }
+
 }
