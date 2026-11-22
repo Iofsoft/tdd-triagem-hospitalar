@@ -8,6 +8,7 @@ import br.ifsp.tdd_triagem_hospitalar.domain.model.StatusAtendimento;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.LocalDateTime;
@@ -197,7 +198,9 @@ class JdbcAtendimentoRepositoryTest {
         void shouldThrowExceptionWhenAttendanceIdIsInvalid() {
             jdbcTemplate.update("INSERT INTO atendimento (id, cpf, status) VALUES (?, ?, ?)", "invalid-id", CPF_1, StatusAtendimento.AGUARDANDO_TRIAGEM.name());
 
-            assertThatThrownBy(() -> sut.buscarTodos()).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> sut.buscarTodos())
+                    .isInstanceOf(InvalidDataAccessApiUsageException.class)
+                    .hasRootCauseInstanceOf(IllegalArgumentException.class);
         }
     }
 }
