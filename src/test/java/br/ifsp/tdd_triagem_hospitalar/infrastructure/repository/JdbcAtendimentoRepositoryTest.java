@@ -169,5 +169,11 @@ class JdbcAtendimentoRepositoryTest {
             assertThat(attendance.getMedicoes().get(1).getId()).isEqualTo(middleMeasurement.getId());
             assertThat(attendance.getMedicoes().get(2).getId()).isEqualTo(newestMeasurement.getId());
         }
+
+        @Test
+        @DisplayName("Should return empty list when there are no attendances")
+        void shouldReturnEmptyListWhenThereAreNoAttendances() {
+            assertThat(sut.buscarTodos()).isEmpty();
+        }
     }
 }
