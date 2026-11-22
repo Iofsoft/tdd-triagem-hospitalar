@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
 @Tag("PersistenceTest")
@@ -189,6 +190,14 @@ class JdbcAtendimentoRepositoryTest {
             assertThat(attendances)
                     .extracting(Atendimento::getId)
                     .containsExactlyInAnyOrder(initialAttendance.getId(), anotherAttendance.getId());
+        }
+
+        @Test
+        @DisplayName("Should throw exception when attendance id is invalid")
+        void shouldThrowExceptionWhenAttendanceIdIsInvalid() {
+            jdbcTemplate.update("INSERT INTO atendimento (id, cpf, status) VALUES (?, ?, ?)", "invalid-id", CPF_1, StatusAtendimento.AGUARDANDO_TRIAGEM.name());
+
+            assertThatThrownBy(() -> sut.buscarTodos()).isInstanceOf(IllegalArgumentException.class);
         }
     }
 }
