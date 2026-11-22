@@ -222,5 +222,17 @@ class JdbcAtendimentoRepositoryTest {
         void shouldThrowExceptionWhenCpfIsNull() {
             assertThatThrownBy(() -> sut.existeAtendimentoAtivoPorCpf(null)).isInstanceOf(NullPointerException.class);
         }
+
+        @ParameterizedTest(name = "active status: {0}")
+        @EnumSource(value = StatusAtendimento.class, names = {"AGUARDANDO_TRIAGEM", "AGUARDANDO_CONSULTA", "EM_CONSULTA"})
+        @DisplayName("Should identify active attendance for CPF")
+        void shouldIdentifyActiveAttendanceForCpf(StatusAtendimento status) {
+            ClassificacaoRisco riskClassification = status == StatusAtendimento.AGUARDANDO_TRIAGEM ? null : ClassificacaoRisco.VERDE;
+            Atendimento attendance = new Atendimento(attendanceId, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_TRIAGEM, riskClassification, List.of());
+            sut.salvar(attendance);
+            boolean exists = sut.existeAtendimentoAtivoPorCpf(new Cpf(CPF_1));
+
+            assertThat(exists).isTrue();
+        }
     }
 }
