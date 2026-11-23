@@ -71,9 +71,8 @@ class JdbcAtendimentoRepositoryTest {
         @Test
         @DisplayName("Should save attendance with all measurements")
         void shouldSaveAttendanceWithAllMeasurements() {
-            UUID attendanceId = UUID.randomUUID();
-
-            sut.salvar(initialAttendance);
+            Atendimento attendance = new Atendimento(attendanceId, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_TRIAGEM, null, List.of(firstMeasurement, secondMeasurement));
+            sut.salvar(attendance);
 
             Optional<Atendimento> result = sut.buscarPorId(attendanceId);
 
