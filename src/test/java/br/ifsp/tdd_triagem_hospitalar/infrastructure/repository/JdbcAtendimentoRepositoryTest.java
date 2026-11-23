@@ -102,16 +102,15 @@ class JdbcAtendimentoRepositoryTest {
         @Test
         @DisplayName("Should replace attendance without duplicating")
         void shouldReplaceAttendanceWithoutDuplicating() {
-            UUID id = UUID.randomUUID();
             sut.salvar(initialAttendance);
             sut.salvar(updatedAttendance);
 
-            Optional<Atendimento> result = sut.buscarPorId(id);
+            Optional<Atendimento> result = sut.buscarPorId(attendanceId);
 
             assertThat(result).isPresent();
             Atendimento savedAttendance = result.get();
 
-            assertThat(savedAttendance.getId()).isEqualTo(id);
+            assertThat(savedAttendance.getId()).isEqualTo(attendanceId);
             assertThat(savedAttendance.getStatus()).isEqualTo(StatusAtendimento.AGUARDANDO_CONSULTA);
         }
     }
