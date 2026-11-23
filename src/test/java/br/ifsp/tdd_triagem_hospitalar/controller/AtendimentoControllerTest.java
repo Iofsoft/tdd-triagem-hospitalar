@@ -1,6 +1,8 @@
 package br.ifsp.tdd_triagem_hospitalar.controller;
 
 import br.ifsp.tdd_triagem_hospitalar.domain.model.Atendimento;
+import br.ifsp.tdd_triagem_hospitalar.domain.model.ClassificacaoRisco;
+import br.ifsp.tdd_triagem_hospitalar.domain.model.StatusAtendimento;
 import br.ifsp.tdd_triagem_hospitalar.infrastructure.repository.JdbcAtendimentoRepository;
 import br.ifsp.tdd_triagem_hospitalar.security.user.User;
 import br.ifsp.tdd_triagem_hospitalar.utils.BaseApiIntegrationTest;
@@ -112,5 +114,35 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
         final Atendimento atendimento = repository.buscarPorId(responseId).orElseThrow();
 
         assertThat(atendimento.getId()).isEqualTo(responseId);
+    }
+
+    @Test
+    @DisplayName("Should perform initial triage")
+    void shouldPerformInitialTriage() {
+        final String plainTextPassword = "senha123";
+        final User user = registerUser(plainTextPassword);
+        final String token = authenticate(user.getEmail(), plainTextPassword);
+
+        final Atendimento atendimento = EntityBuilder.createAtendimento();
+        repository.salvar(atendimento);
+
+        final RealizarTriagemRequest request =
+                new RealizarTriagemRequest(36.5, 80, ClassificacaoRisco.VERDE);
+
+        given()
+                .contentType("application/json")
+                .port(port)
+                .header("Authorization", "Bearer " + token)
+                .body(request).
+                when()
+                .post("/api/v1/atendimentos/" + atendimento.getId() + "/triagem").
+                then()
+                .log().ifValidationFails(LogDetail.BODY)
+                .statusCode(201);
+
+        final Atendimento atualizado = repository.buscarPorId(atendimento.getId()).orElseThrow();
+
+        assertThat(atualizado.getStatus()).isEqualTo(StatusAtendimento.AGUARDANDO_CONSULTA);
+        assertThat(atualizado.getMedicoes()).hasSize(1);
     }
 }
