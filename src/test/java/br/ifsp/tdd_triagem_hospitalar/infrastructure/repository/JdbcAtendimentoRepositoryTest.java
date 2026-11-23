@@ -105,12 +105,16 @@ class JdbcAtendimentoRepositoryTest {
             sut.salvar(updatedAttendance);
 
             Optional<Atendimento> result = sut.buscarPorId(attendanceId);
+            List<Atendimento> attendances = sut.buscarTodos();
 
             assertThat(result).isPresent();
+
             Atendimento savedAttendance = result.get();
 
             assertThat(savedAttendance.getId()).isEqualTo(attendanceId);
             assertThat(savedAttendance.getStatus()).isEqualTo(StatusAtendimento.AGUARDANDO_CONSULTA);
+            assertThat(savedAttendance.getClassificacaoRisco()).isEqualTo(ClassificacaoRisco.VERDE);
+            assertThat(attendances).hasSize(1);
         }
     }
 
