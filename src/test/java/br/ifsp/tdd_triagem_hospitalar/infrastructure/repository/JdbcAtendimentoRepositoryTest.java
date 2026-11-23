@@ -226,11 +226,11 @@ class JdbcAtendimentoRepositoryTest {
         @DisplayName("Should identify active attendance for CPF")
         void shouldIdentifyActiveAttendanceForCpf(StatusAtendimento status) {
             ClassificacaoRisco riskClassification = status == StatusAtendimento.AGUARDANDO_TRIAGEM ? null : ClassificacaoRisco.VERDE;
-            Atendimento attendance = new Atendimento(attendanceId, new Cpf(CPF_1), StatusAtendimento.AGUARDANDO_TRIAGEM, riskClassification, List.of());
+            Atendimento attendance = new Atendimento(attendanceId, new Cpf(CPF_1), status, riskClassification, List.of());
             sut.salvar(attendance);
-            boolean exists = sut.existeAtendimentoAtivoPorCpf(new Cpf(CPF_1));
+            boolean result = sut.existeAtendimentoAtivoPorCpf(new Cpf(CPF_1));
 
-            assertThat(exists).isTrue();
+            assertThat(result).isTrue();
         }
 
         @ParameterizedTest
