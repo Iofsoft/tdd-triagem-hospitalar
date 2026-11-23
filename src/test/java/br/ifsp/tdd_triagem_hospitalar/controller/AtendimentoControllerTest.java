@@ -15,6 +15,7 @@ import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
 
 public class AtendimentoControllerTest extends BaseApiIntegrationTest {
     private static final String CPF = "640.174.540-11";
@@ -84,5 +85,32 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
 
         assertThat(response.id()).isEqualTo(atendimento.getId());
         assertThat(response.cpf()).isEqualTo(atendimento.getCpf().valor());
+    }
+
+    @Test
+    @DisplayName("Should open attendance")
+    void shouldOpenAttendance() {
+        final String plainTextPassword = "senha123";
+        final User user = registerUser(plainTextPassword);
+        final String token = authenticate(user.getEmail(), plainTextPassword);
+
+        final UUID responseId =
+                given()
+                        .contentType("application/json")
+                        .port(port)
+                        .header("Authorization", "Bearer " + token)
+                        .body(new AbrirAtendimentoRequest(CPF)).
+                        when()
+                        .post("/api/v1/atendimentos").
+                        then()
+                        .log().ifValidationFails(LogDetail.BODY)
+                        .statusCode(201)
+                        .body(notNullValue())
+                        .extract()
+                        .as(UUID.class);
+
+        final Atendimento atendimento = repository.buscarPorId(responseId).orElseThrow();
+
+        assertThat(atendimento.getId()).isEqualTo(responseId);
     }
 }
