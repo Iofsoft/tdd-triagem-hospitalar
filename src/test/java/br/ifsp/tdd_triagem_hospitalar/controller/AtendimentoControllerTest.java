@@ -386,4 +386,37 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
 
         assertThat(repository.buscarTodos()).isEmpty();
     }
+
+    @Test
+    @DisplayName("Should reject invalid measurement")
+    void shouldRejectInvalidMeasurement() {
+        final String plainTextPassword = "senha123";
+        final User user = registerUser(plainTextPassword);
+        final String token = authenticate(user.getEmail(), plainTextPassword);
+
+        final Atendimento atendimento = EntityBuilder.createAtendimento();
+        repository.salvar(atendimento);
+
+        final RegistrarMedicaoRequest request = new RegistrarMedicaoRequest(-10, 90);
+
+        final String response =
+                given()
+                        .contentType("application/json")
+                        .port(port)
+                        .header("Authorization", "Bearer " + token)
+                        .body(request).
+                        when()
+                        .post("/api/v1/atendimentos/" + atendimento.getId() + "/medicoes").
+                        then()
+                        .log().ifValidationFails(LogDetail.BODY)
+                        .statusCode(400)
+                        .extract()
+                        .asString();
+
+        assertThat(response).isNotBlank();
+
+        final Atendimento atualizado = repository.buscarPorId(atendimento.getId()).orElseThrow();
+
+        assertThat(atualizado.getMedicoes()).isEmpty();
+    }
 }
