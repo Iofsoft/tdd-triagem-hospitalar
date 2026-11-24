@@ -2,6 +2,7 @@ package br.ifsp.tdd_triagem_hospitalar.controller;
 
 import br.ifsp.tdd_triagem_hospitalar.domain.model.Atendimento;
 import br.ifsp.tdd_triagem_hospitalar.domain.model.ClassificacaoRisco;
+import br.ifsp.tdd_triagem_hospitalar.domain.model.MedicaoSinaisVitais;
 import br.ifsp.tdd_triagem_hospitalar.domain.model.StatusAtendimento;
 import br.ifsp.tdd_triagem_hospitalar.infrastructure.repository.JdbcAtendimentoRepository;
 import br.ifsp.tdd_triagem_hospitalar.security.user.User;
@@ -106,7 +107,7 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
                         .post("/api/v1/atendimentos").
                         then()
                         .log().ifValidationFails(LogDetail.BODY)
-                        .statusCode(201)
+                        .statusCode(200)
                         .body(notNullValue())
                         .extract()
                         .as(UUID.class);
@@ -138,11 +139,42 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
                 .post("/api/v1/atendimentos/" + atendimento.getId() + "/triagem").
                 then()
                 .log().ifValidationFails(LogDetail.BODY)
-                .statusCode(201);
+                .statusCode(200);
 
         final Atendimento atualizado = repository.buscarPorId(atendimento.getId()).orElseThrow();
 
         assertThat(atualizado.getStatus()).isEqualTo(StatusAtendimento.AGUARDANDO_CONSULTA);
+        assertThat(atualizado.getMedicoes()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("Should start medical consultation")
+    void shouldStartMedicalConsultation() {
+        final String plainTextPassword = "senha123";
+        final User user = registerUser(plainTextPassword);
+        final String token = authenticate(user.getEmail(), plainTextPassword);
+
+        final Atendimento atendimento = EntityBuilder.createAtendimento();
+        repository.salvar(atendimento);
+
+        atendimento.realizarTriagem(EntityBuilder.createMedicao(), ClassificacaoRisco.VERDE);
+
+        repository.salvar(atendimento);
+
+        given()
+                .contentType("application/json")
+                .port(port)
+                .header("Authorization", "Bearer " + token).
+                when()
+                .patch("/api/v1/atendimentos/" + atendimento.getId() + "/consulta").
+                then()
+                .log().ifValidationFails(LogDetail.BODY)
+                .statusCode(200);
+
+        final Atendimento atualizado = repository.buscarPorId(atendimento.getId()).orElseThrow();
+
+        assertThat(atualizado.getStatus()).isEqualTo(StatusAtendimento.EM_CONSULTA);
+        assertThat(atualizado.getClassificacaoRisco()).isEqualTo(ClassificacaoRisco.VERDE);
         assertThat(atualizado.getMedicoes()).hasSize(1);
     }
 }
