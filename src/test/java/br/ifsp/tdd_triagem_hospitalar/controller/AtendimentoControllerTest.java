@@ -303,4 +303,35 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
 
         assertThat(atualizado.getStatus()).isEqualTo(StatusAtendimento.FINALIZADO);
     }
+
+    @Test
+    @DisplayName("Should cancel attendance")
+    void shouldCancelAttendance() {
+        final String plainTextPassword = "senha123";
+        final User user = registerUser(plainTextPassword);
+        final String token = authenticate(user.getEmail(), plainTextPassword);
+
+
+        final Atendimento atendimento = EntityBuilder.createAtendimento();
+        repository.salvar(atendimento);
+
+        final String motivo = "Paciente morreu mas passa bem";
+        final CancelarAtendimentoRequest request = new CancelarAtendimentoRequest(motivo);
+
+        given()
+                .contentType("application/json")
+                .port(port)
+                .header("Authorization", "Bearer " + token)
+                .body(request).
+                when()
+                .patch("/api/v1/atendimentos/" + atendimento.getId() + "/cancelamento").
+                then()
+                .log().ifValidationFails(LogDetail.BODY)
+                .statusCode(200);
+
+        final Atendimento atualizado = repository.buscarPorId(atendimento.getId()).orElseThrow();
+
+        assertThat(atualizado.getStatus()).isEqualTo(StatusAtendimento.CANCELADO);
+        assertThat(atualizado.getMotivoCancelamento()).isEqualTo(motivo);
+    }
 }
