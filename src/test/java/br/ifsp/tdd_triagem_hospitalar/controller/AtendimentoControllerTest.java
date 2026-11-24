@@ -371,4 +371,19 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
         assertThat(repository.buscarPorId(primeiroId)).isPresent();
         assertThat(repository.buscarTodos()).hasSize(1);
     }
+
+    @Test
+    @DisplayName("Should require authentication to list attendances")
+    void shouldRequireAuthentication() {
+        given()
+                .contentType("application/json")
+                .port(port).
+                when()
+                .get("/api/v1/atendimentos").
+                then()
+                .log().ifValidationFails(LogDetail.BODY)
+                .statusCode(401);
+
+        assertThat(repository.buscarTodos()).isEmpty();
+    }
 }
