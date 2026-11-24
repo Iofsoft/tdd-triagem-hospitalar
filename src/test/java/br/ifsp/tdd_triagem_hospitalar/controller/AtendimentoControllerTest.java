@@ -419,4 +419,33 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
 
         assertThat(atualizado.getMedicoes()).isEmpty();
     }
+
+    @Test
+    @DisplayName("Should reject attendance without initial triage")
+    void shouldRejectAttendanceWithoutTriage() {
+        final String plainTextPassword = "senha123";
+        final User user = registerUser(plainTextPassword);
+        final String token = authenticate(user.getEmail(), plainTextPassword);
+
+        final Atendimento atendimento = EntityBuilder.createAtendimento();
+        repository.salvar(atendimento);
+
+
+        given()
+                .contentType("application/json")
+                .port(port)
+                .header("Authorization", "Bearer " + token).
+                when()
+                .patch("/api/v1/atendimentos/" + atendimento.getId() + "/consulta").
+                then()
+                .log().ifValidationFails(LogDetail.BODY)
+                .statusCode(403)
+                .extract()
+                .asString();
+
+
+        final Atendimento atualizado = repository.buscarPorId(atendimento.getId()).orElseThrow();
+
+        assertThat(atualizado.getStatus()).isEqualTo(StatusAtendimento.AGUARDANDO_TRIAGEM);
+    }
 }
