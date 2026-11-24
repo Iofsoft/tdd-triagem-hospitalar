@@ -241,4 +241,36 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
 
         assertThat(atualizado.getClassificacaoRisco()).isEqualTo(ClassificacaoRisco.AMARELO);
     }
+
+    @Test
+    @DisplayName("Should register prescription")
+    void shouldRegisterPrescription() {
+        final String plainTextPassword = "senha123";
+        final User user = registerUser(plainTextPassword);
+        final String token = authenticate(user.getEmail(), plainTextPassword);
+
+        final Atendimento atendimento = EntityBuilder.createAtendimento();
+        atendimento.realizarTriagem(EntityBuilder.createMedicao(), ClassificacaoRisco.AMARELO);
+        atendimento.iniciarConsulta();
+        repository.salvar(atendimento);
+
+        final String prescricao = "Repouso e hidratação";
+        final RegistrarPrescricaoRequest request = new RegistrarPrescricaoRequest(prescricao);
+
+        given()
+                .contentType("application/json")
+                .port(port)
+                .header("Authorization", "Bearer " + token)
+                .body(request).
+                when()
+                .patch("/api/v1/atendimentos/" + atendimento.getId() + "/prescricao").
+                then()
+                .log().ifValidationFails(LogDetail.BODY)
+                .statusCode(200);
+
+        final Atendimento atualizado = repository.buscarPorId(atendimento.getId()).orElseThrow();
+
+        assertThat(atualizado.getPrescricao()).isEqualTo(prescricao);
+        assertThat(atualizado.getStatus()).isEqualTo(StatusAtendimento.EM_CONSULTA);
+    }
 }
