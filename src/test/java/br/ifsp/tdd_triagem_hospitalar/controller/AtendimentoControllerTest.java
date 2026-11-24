@@ -177,4 +177,39 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
         assertThat(atualizado.getClassificacaoRisco()).isEqualTo(ClassificacaoRisco.VERDE);
         assertThat(atualizado.getMedicoes()).hasSize(1);
     }
+
+    @Test
+    @DisplayName("Should register a new measurement")
+    void shouldRegisterNewMeasurement() {
+        final String plainTextPassword = "senha123";
+        final User user = registerUser(plainTextPassword);
+        final String token = authenticate(user.getEmail(), plainTextPassword);
+
+        final Atendimento atendimento = EntityBuilder.createAtendimento();
+        repository.salvar(atendimento);
+
+        final int quantidadeAnterior = atendimento.getMedicoes().size();
+        final RegistrarMedicaoRequest request = new RegistrarMedicaoRequest(37.2, 90);
+
+        given()
+                .contentType("application/json")
+                .port(port)
+                .header("Authorization", "Bearer " + token)
+                .body(request).
+                when()
+                .post("/api/v1/atendimentos/" + atendimento.getId() + "/medicoes").
+                then()
+                .log().ifValidationFails(LogDetail.BODY)
+                .statusCode(200);
+
+        final Atendimento atualizado = repository.buscarPorId(atendimento.getId()).orElseThrow();
+
+        assertThat(atualizado.getMedicoes()).hasSize(quantidadeAnterior + 1);
+
+        final MedicaoSinaisVitais ultimaMedicao = atualizado.getMedicoes().get(atualizado.getMedicoes().size() - 1);
+
+        assertThat(ultimaMedicao.getTemperatura()).isEqualTo(37.2);
+        assertThat(ultimaMedicao.getFrequenciaCardiaca()).isEqualTo(90);
+        assertThat(atualizado.getStatus()).isEqualTo(StatusAtendimento.AGUARDANDO_TRIAGEM);
+    }
 }
