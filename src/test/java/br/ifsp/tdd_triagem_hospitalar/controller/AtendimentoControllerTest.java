@@ -212,4 +212,33 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
         assertThat(ultimaMedicao.getFrequenciaCardiaca()).isEqualTo(90);
         assertThat(atualizado.getStatus()).isEqualTo(StatusAtendimento.AGUARDANDO_TRIAGEM);
     }
+
+    @Test
+    @DisplayName("Should reclassify attendance risk")
+    void shouldReclassifyRisk() {
+        final String plainTextPassword = "senha123";
+        final User user = registerUser(plainTextPassword);
+        final String token = authenticate(user.getEmail(), plainTextPassword);
+
+        final Atendimento atendimento = EntityBuilder.createAtendimento();
+        repository.salvar(atendimento);
+
+        final ReclassificarRiscoRequest request =
+                new ReclassificarRiscoRequest(ClassificacaoRisco.AMARELO, "Piora dos sinais vitais");
+
+        given()
+                .contentType("application/json")
+                .port(port)
+                .header("Authorization", "Bearer " + token)
+                .body(request).
+                when()
+                .patch("/api/v1/atendimentos/" + atendimento.getId() + "/classificacao-risco").
+                then()
+                .log().ifValidationFails(LogDetail.BODY)
+                .statusCode(200);
+
+        final Atendimento atualizado = repository.buscarPorId(atendimento.getId()).orElseThrow();
+
+        assertThat(atualizado.getClassificacaoRisco()).isEqualTo(ClassificacaoRisco.AMARELO);
+    }
 }
