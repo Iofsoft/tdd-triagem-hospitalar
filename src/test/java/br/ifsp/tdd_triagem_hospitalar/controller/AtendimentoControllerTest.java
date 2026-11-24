@@ -10,6 +10,7 @@ import br.ifsp.tdd_triagem_hospitalar.utils.BaseApiIntegrationTest;
 import br.ifsp.tdd_triagem_hospitalar.utils.EntityBuilder;
 import io.restassured.filter.log.LogDetail;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -27,6 +28,8 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
     private JdbcAtendimentoRepository repository;
 
     @Test
+    @Tag("ApiTest")
+    @Tag("IntegrationTest")
     @DisplayName("Should list all attendances")
     void shouldListAllAttendances() {
         final String plainTextPassword = "senha123";
@@ -65,6 +68,8 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
     }
 
     @Test
+    @Tag("ApiTest")
+    @Tag("IntegrationTest")
     @DisplayName("Should find attendance by id")
     void shouldFindAttendanceById() {
         final String plainTextPassword = "senha123";
@@ -92,6 +97,8 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
     }
 
     @Test
+    @Tag("ApiTest")
+    @Tag("IntegrationTest")
     @DisplayName("Should open attendance")
     void shouldOpenAttendance() {
         final String plainTextPassword = "senha123";
@@ -119,6 +126,8 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
     }
 
     @Test
+    @Tag("ApiTest")
+    @Tag("IntegrationTest")
     @DisplayName("Should perform initial triage")
     void shouldPerformInitialTriage() {
         final String plainTextPassword = "senha123";
@@ -149,6 +158,8 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
     }
 
     @Test
+    @Tag("ApiTest")
+    @Tag("IntegrationTest")
     @DisplayName("Should start medical consultation")
     void shouldStartMedicalConsultation() {
         final String plainTextPassword = "senha123";
@@ -180,6 +191,8 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
     }
 
     @Test
+    @Tag("ApiTest")
+    @Tag("IntegrationTest")
     @DisplayName("Should register a new measurement")
     void shouldRegisterNewMeasurement() {
         final String plainTextPassword = "senha123";
@@ -215,6 +228,8 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
     }
 
     @Test
+    @Tag("ApiTest")
+    @Tag("IntegrationTest")
     @DisplayName("Should reclassify attendance risk")
     void shouldReclassifyRisk() {
         final String plainTextPassword = "senha123";
@@ -244,6 +259,8 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
     }
 
     @Test
+    @Tag("ApiTest")
+    @Tag("IntegrationTest")
     @DisplayName("Should register prescription")
     void shouldRegisterPrescription() {
         final String plainTextPassword = "senha123";
@@ -276,6 +293,8 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
     }
 
     @Test
+    @Tag("ApiTest")
+    @Tag("IntegrationTest")
     @DisplayName("Should complete attendance successfully")
     void shouldCompleteAttendance() {
         final String plainTextPassword = "senha123";
@@ -306,6 +325,8 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
     }
 
     @Test
+    @Tag("ApiTest")
+    @Tag("IntegrationTest")
     @DisplayName("Should cancel attendance")
     void shouldCancelAttendance() {
         final String plainTextPassword = "senha123";
@@ -337,6 +358,8 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
     }
 
     @Test
+    @Tag("ApiTest")
+    @Tag("IntegrationTest")
     @DisplayName("Should not open duplicate active attendance")
     void shouldNotOpenDuplicateActiveAttendance() {
         final String plainTextPassword = "senha123";
@@ -373,6 +396,8 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
     }
 
     @Test
+    @Tag("ApiTest")
+    @Tag("IntegrationTest")
     @DisplayName("Should require authentication to list attendances")
     void shouldRequireAuthentication() {
         given()
@@ -388,6 +413,8 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
     }
 
     @Test
+    @Tag("ApiTest")
+    @Tag("IntegrationTest")
     @DisplayName("Should reject invalid measurement")
     void shouldRejectInvalidMeasurement() {
         final String plainTextPassword = "senha123";
@@ -421,6 +448,8 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
     }
 
     @Test
+    @Tag("ApiTest")
+    @Tag("IntegrationTest")
     @DisplayName("Should reject attendance without initial triage")
     void shouldRejectAttendanceWithoutTriage() {
         final String plainTextPassword = "senha123";
@@ -447,5 +476,36 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
         final Atendimento atualizado = repository.buscarPorId(atendimento.getId()).orElseThrow();
 
         assertThat(atualizado.getStatus()).isEqualTo(StatusAtendimento.AGUARDANDO_TRIAGEM);
+    }
+
+    @Test
+    @Tag("ApiTest")
+    @Tag("IntegrationTest")
+    @DisplayName("Should reject attendance finalization without prescription")
+    void shouldRejectFinalizationWithoutPrescription() {
+        final String plainTextPassword = "senha123";
+        final User user = registerUser(plainTextPassword);
+        final String token = authenticate(user.getEmail(), plainTextPassword);
+
+        final Atendimento atendimento = EntityBuilder.createAtendimento();
+        atendimento.realizarTriagem(EntityBuilder.createMedicao(), ClassificacaoRisco.AMARELO);
+        atendimento.iniciarConsulta();
+        repository.salvar(atendimento);
+
+        given()
+                .contentType("application/json")
+                .port(port)
+                .header("Authorization", "Bearer " + token).
+                when()
+                .patch("/api/v1/atendimentos/" + atendimento.getId() + "/finalizacao").
+                then()
+                .log().ifValidationFails(LogDetail.BODY)
+                .statusCode(403);
+
+
+        final Atendimento atualizado = repository.buscarPorId(atendimento.getId()).orElseThrow();
+
+        assertThat(atualizado.getStatus()).isEqualTo(StatusAtendimento.EM_CONSULTA);
+        assertThat(atualizado.getPrescricao()).isNull();
     }
 }
