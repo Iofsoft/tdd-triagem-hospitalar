@@ -18,6 +18,7 @@ import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
 public class AtendimentoControllerTest extends BaseApiIntegrationTest {
@@ -333,5 +334,41 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
 
         assertThat(atualizado.getStatus()).isEqualTo(StatusAtendimento.CANCELADO);
         assertThat(atualizado.getMotivoCancelamento()).isEqualTo(motivo);
+    }
+
+    @Test
+    @DisplayName("Should not open duplicate active attendance")
+    void shouldNotOpenDuplicateActiveAttendance() {
+        final String plainTextPassword = "senha123";
+        final User user = registerUser(plainTextPassword);
+        final String token = authenticate(user.getEmail(), plainTextPassword);
+
+        final UUID primeiroId =
+                given()
+                        .contentType("application/json")
+                        .port(port)
+                        .header("Authorization", "Bearer " + token)
+                        .body(new AbrirAtendimentoRequest(CPF)).
+                        when()
+                        .post("/api/v1/atendimentos").
+                        then()
+                        .statusCode(201)
+                        .extract()
+                        .as(UUID.class);
+
+        given()
+                .contentType("application/json")
+                .port(port)
+                .header("Authorization", "Bearer " + token)
+                .body(new AbrirAtendimentoRequest(CPF)).
+                when()
+                .post("/api/v1/atendimentos").
+                then()
+                .log().ifValidationFails(LogDetail.BODY)
+                .statusCode(403)
+                .body("message", equalTo("Paciente já possui atendimento ativo."));
+
+        assertThat(repository.buscarPorId(primeiroId)).isPresent();
+        assertThat(repository.buscarTodos()).hasSize(1);
     }
 }
