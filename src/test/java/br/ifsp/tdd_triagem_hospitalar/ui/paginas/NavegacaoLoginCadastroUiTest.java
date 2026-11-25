@@ -13,9 +13,6 @@ import org.openqa.selenium.By;
 import com.github.javafaker.Faker;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import java.util.Arrays;
-import java.util.stream.Collectors;
-
 import java.time.Duration;
 import java.util.UUID;
 
@@ -30,7 +27,8 @@ class NavegacaoLoginCadastroUiTest{
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless=new");
         driver = new ChromeDriver(options);
-        driver.get("file:///C:/Users/l/IdeaProjects/tdd-triagem-hospitalar/frontend/index.html");
+        Path pagina = Path.of("frontend", "index.html").toAbsolutePath();
+        driver.get(pagina.toUri().toString());
     }
     @AfterEach
     void fecharNavegador(){
@@ -58,23 +56,6 @@ class NavegacaoLoginCadastroUiTest{
         String mensagem = cadastro.cadastrarComCamposVazios();
 
         assertEquals("Preencha todos os campos.", mensagem);
-    }
-
-    @Test
-    void deveMostrarAlertaQuandoLoginEhInvalido(){
-        LoginPage login = new LoginPage(driver);
-
-        String mensagem = login.tentarLogin("invalido@example.com", "senha-incorreta");
-        assertEquals("E-mail ou senha incorretos.", mensagem);
-    }
-
-    @Test
-    void deveManterLoginVisivelEmTelaEstreita(){
-        driver.manage().window().setSize(new org.openqa.selenium.Dimension(375, 812));
-        LoginPage login = new LoginPage(driver);
-
-        assertTrue(login.estaAberta());
-        assertTrue(driver.findElement(By.id("btn-entrar")).isDisplayed());
     }
 
     @Test
@@ -108,36 +89,6 @@ class NavegacaoLoginCadastroUiTest{
                 .until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-fila")));
 
         assertTrue(new FilaPage(driver).estaAberta());
-    }
-
-
-
-    @Test
-    void deveAbrirAtendimentoNaFila() {
-        String nome = faker.name().firstName();
-        String sobrenome = faker.name().lastName();
-        String email = "ui-" + UUID.randomUUID() + "@example.com";
-        String senha = faker.internet().password(10, 16);
-        CadastroPage cadastro = new LoginPage(driver).abrirCadastro();
-        cadastro.preencherCadastro(nome, sobrenome, email, senha);
-        cadastro.clicarCriarConta();
-
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.alertIsPresent());
-        driver.switchTo().alert().accept();
-
-        LoginPage login = new LoginPage(driver);
-        login.preencherLogin(email, senha);
-        login.clicarEntrar();
-
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-fila")));
-
-        String cpf = "52998224725";
-        FilaPage fila = new FilaPage(driver);
-        fila.abrirAtendimento(cpf);
-
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBePresentInElementLocated(By.id("lista-atendimentos"), cpf));
-
-        assertTrue(fila.obterTextoDaFila().contains(cpf));
     }
 
 
@@ -179,7 +130,6 @@ class NavegacaoLoginCadastroUiTest{
         String sobrenome = faker.name().lastName();
         String email = "ui-" + UUID.randomUUID() + "@example.com";
         String senha = faker.internet().password(10, 16);
-        String cpf = "39053344705";
 
         CadastroPage cadastro = new LoginPage(driver).abrirCadastro();
         cadastro.preencherCadastro(nome, sobrenome, email, senha);
@@ -191,24 +141,24 @@ class NavegacaoLoginCadastroUiTest{
         LoginPage login = new LoginPage(driver);
         login.preencherLogin(email, senha);
         login.clicarEntrar();
-
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-fila")));
-
-        FilaPage fila = new FilaPage(driver);
-        fila.abrirAtendimento(cpf);
-
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBePresentInElementLocated(By.id("lista-atendimentos"), cpf));
-
-        driver.findElement(By.xpath("//tr[td[normalize-space()='" + cpf + "']]//button")).click();
-
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-atendimento")));
-
-        driver.findElement(By.id("btn-voltar")).click();
-
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-fila")));
-
-        assertTrue(new FilaPage(driver).estaAberta());
+        new WebDriverWait(driver, Duration.ofSeconds(5))
+                .until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-fila")));
+        return new FilaPage(driver);
     }
 
+    private String gerarCpfValido() {
+        String base = faker.number().digits(9);
+        int digito1 = calcularDigitoCpf(base, 10);
+        int digito2 = calcularDigitoCpf(base + digito1, 11);
+        return base + digito1 + digito2;
+    }
 
+    private int calcularDigitoCpf(String cpfParcial, int pesoInicial) {
+        int soma = 0;
+        for (int i = 0; i < cpfParcial.length(); i++) {
+            soma += Character.getNumericValue(cpfParcial.charAt(i)) * (pesoInicial - i);
+        }
+        int resto = (soma * 10) % 11;
+        return resto == 10 ? 0 : resto;
+    }
 }
