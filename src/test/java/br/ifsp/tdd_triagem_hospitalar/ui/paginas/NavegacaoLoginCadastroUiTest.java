@@ -167,14 +167,29 @@ class NavegacaoLoginCadastroUiTest{
         assertTrue(mensagem.contains("Temperatura fora da faixa permitida"));
         assertEquals("Aguardando triagem", atendimento.obterStatus());
     }
+
+    @Test
+    void deveRegistrarNovaMedicaoDuranteConsulta() {
+        AtendimentoPage atendimento = abrirNovoAtendimentoNosDetalhes(gerarCpfValido());
+        atendimento.realizarTriagem("36,5", "80", "AMARELO");
+
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBe(By.id("detalhe-status"), "Aguardando consulta"));
+        atendimento.iniciarConsulta();
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBe(By.id("detalhe-status"), "Em consulta"));
+
+        atendimento.registrarMedicao("37,2", "90");
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBePresentInElementLocated(By.id("detalhe-medicoes"), "90 bpm"));
+
+        assertTrue(atendimento.obterMedicoes().contains("90 bpm"));
+        assertTrue(atendimento.obterMedicoes().contains("37.2") || atendimento.obterMedicoes().contains("37,2"));
+    }
     private AtendimentoPage abrirNovoAtendimentoNosDetalhes(String cpf) {
         FilaPage fila = entrarNaFilaComUsuarioNovo();
         fila.abrirAtendimento(cpf);
-        new WebDriverWait(driver, Duration.ofSeconds(5))
-                .until(ExpectedConditions.textToBePresentInElementLocated(By.id("lista-atendimentos"), cpf));
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBePresentInElementLocated(By.id("lista-atendimentos"), cpf));
         fila.abrirAtendimentoNosDetalhes(cpf);
-        new WebDriverWait(driver, Duration.ofSeconds(5))
-                .until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-atendimento")));
+
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-atendimento")));
         return new AtendimentoPage(driver);
     }
 
