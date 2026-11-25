@@ -153,6 +153,20 @@ class NavegacaoLoginCadastroUiTest{
         assertTrue(atendimento.obterMedicoes().contains("36.5") || atendimento.obterMedicoes().contains("36,5"),
                 "A medição de temperatura deve aparecer nos detalhes do atendimento.");
     }
+
+    @Test
+    void deveExibirErroAoInformarTemperaturaInvalidaNaTriagem() {
+        AtendimentoPage atendimento = abrirNovoAtendimentoNosDetalhes(gerarCpfValido());
+        atendimento.realizarTriagem("50", "80", "AMARELO");
+
+
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.alertIsPresent());
+        String mensagem = driver.switchTo().alert().getText();
+        driver.switchTo().alert().accept();
+
+        assertTrue(mensagem.contains("Temperatura fora da faixa permitida"));
+        assertEquals("Aguardando triagem", atendimento.obterStatus());
+    }
     private AtendimentoPage abrirNovoAtendimentoNosDetalhes(String cpf) {
         FilaPage fila = entrarNaFilaComUsuarioNovo();
         fila.abrirAtendimento(cpf);
