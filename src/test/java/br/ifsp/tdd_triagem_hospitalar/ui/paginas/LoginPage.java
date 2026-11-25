@@ -33,13 +33,7 @@ public class LoginPage {
         driver.findElement(By.id("btn-entrar")).click();
     }
 
-    public String tentarLogin(String email, String senha){
-        driver.findElement(By.id("login-email")).sendKeys(email);
-        driver.findElement(By.id("login-senha")).sendKeys(senha);
-        driver.findElement(By.id("btn-entrar")).click();
 
-        return driver.switchTo().alert().getText();
-    }
 
 
 }
