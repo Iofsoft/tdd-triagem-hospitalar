@@ -183,6 +183,23 @@ class NavegacaoLoginCadastroUiTest{
         assertTrue(atendimento.obterMedicoes().contains("90 bpm"));
         assertTrue(atendimento.obterMedicoes().contains("37.2") || atendimento.obterMedicoes().contains("37,2"));
     }
+
+    @Test
+    void devePrescreverEFinalizarAtendimento() {
+        AtendimentoPage atendimento = abrirNovoAtendimentoNosDetalhes(gerarCpfValido());
+        atendimento.realizarTriagem("36,5", "80", "AMARELO");
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBe(By.id("detalhe-status"), "Aguardando consulta"));
+        atendimento.iniciarConsulta();
+
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBe(By.id("detalhe-status"), "Em consulta"));
+
+        atendimento.registrarPrescricao("Repouso e hidratação");
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBe(By.id("detalhe-prescricao"), "Repouso e hidratação"));
+        atendimento.finalizarAtendimento();
+
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBe(By.id("detalhe-status"), "Finalizado"));
+        assertEquals("Finalizado", atendimento.obterStatus());
+    }
     private AtendimentoPage abrirNovoAtendimentoNosDetalhes(String cpf) {
         FilaPage fila = entrarNaFilaComUsuarioNovo();
         fila.abrirAtendimento(cpf);
