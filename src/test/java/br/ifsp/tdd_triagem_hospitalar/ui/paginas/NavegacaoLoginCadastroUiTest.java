@@ -83,8 +83,7 @@ class NavegacaoLoginCadastroUiTest{
 
 
 
-        new WebDriverWait(driver, Duration.ofSeconds(5))
-                .until(ExpectedConditions.alertIsPresent());
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.alertIsPresent());
 
 
         String mensagem = driver.switchTo().alert().getText();
@@ -97,8 +96,7 @@ class NavegacaoLoginCadastroUiTest{
         login.preencherLogin(email, senha);
         login.clicarEntrar();
 
-        new WebDriverWait(driver, Duration.ofSeconds(5))
-                .until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-fila")));
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-fila")));
 
         assertTrue(new FilaPage(driver).estaAberta());
     }
@@ -138,13 +136,23 @@ class NavegacaoLoginCadastroUiTest{
 
     @Test
     void deveVoltarDosDetalhesParaFila() {
-        abrirNovoAtendimentoNosDetalhes(gerarCpfValido());        driver.findElement(By.id("btn-voltar")).click();
+        abrirNovoAtendimentoNosDetalhes(gerarCpfValido());
+        driver.findElement(By.id("btn-voltar")).click();
 
-        new WebDriverWait(driver, Duration.ofSeconds(5))
-                .until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-fila")));
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-fila")));
         assertTrue(new FilaPage(driver).estaAberta());
     }
 
+    @Test
+    void deveRealizarTriagemValida() {
+        AtendimentoPage atendimento = abrirNovoAtendimentoNosDetalhes(gerarCpfValido());
+        atendimento.realizarTriagem("36,5", "80", "AMARELO");
+
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBe(By.id("detalhe-status"), "Aguardando consulta"));
+        assertEquals("AMARELO", atendimento.obterRisco());
+        assertTrue(atendimento.obterMedicoes().contains("36.5") || atendimento.obterMedicoes().contains("36,5"),
+                "A medição de temperatura deve aparecer nos detalhes do atendimento.");
+    }
     private AtendimentoPage abrirNovoAtendimentoNosDetalhes(String cpf) {
         FilaPage fila = entrarNaFilaComUsuarioNovo();
         fila.abrirAtendimento(cpf);
@@ -156,6 +164,7 @@ class NavegacaoLoginCadastroUiTest{
         return new AtendimentoPage(driver);
     }
 
+    private FilaPage entrarNaFilaComUsuarioNovo() {
         String nome = faker.name().firstName();
         String sobrenome = faker.name().lastName();
         String email = "ui-" + UUID.randomUUID() + "@example.com";
