@@ -138,6 +138,24 @@ class NavegacaoLoginCadastroUiTest{
 
     @Test
     void deveVoltarDosDetalhesParaFila() {
+        abrirNovoAtendimentoNosDetalhes(gerarCpfValido());        driver.findElement(By.id("btn-voltar")).click();
+
+        new WebDriverWait(driver, Duration.ofSeconds(5))
+                .until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-fila")));
+        assertTrue(new FilaPage(driver).estaAberta());
+    }
+
+    private AtendimentoPage abrirNovoAtendimentoNosDetalhes(String cpf) {
+        FilaPage fila = entrarNaFilaComUsuarioNovo();
+        fila.abrirAtendimento(cpf);
+        new WebDriverWait(driver, Duration.ofSeconds(5))
+                .until(ExpectedConditions.textToBePresentInElementLocated(By.id("lista-atendimentos"), cpf));
+        fila.abrirAtendimentoNosDetalhes(cpf);
+        new WebDriverWait(driver, Duration.ofSeconds(5))
+                .until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-atendimento")));
+        return new AtendimentoPage(driver);
+    }
+
         String nome = faker.name().firstName();
         String sobrenome = faker.name().lastName();
         String email = "ui-" + UUID.randomUUID() + "@example.com";
