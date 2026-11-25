@@ -200,6 +200,18 @@ class NavegacaoLoginCadastroUiTest{
         new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBe(By.id("detalhe-status"), "Finalizado"));
         assertEquals("Finalizado", atendimento.obterStatus());
     }
+
+    @Test
+    void deveManterMotivoLongoDentroDoPainel() {
+        AtendimentoPage atendimento = abrirNovoAtendimentoNosDetalhes(gerarCpfValido());
+        String motivo = "a".repeat(120);
+
+        atendimento.cancelarAtendimento(motivo);
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBe(By.id("detalhe-status"), "Cancelado"));
+
+        assertTrue(atendimento.motivoEstaContidoNoPainel(), "O motivo longo não deve transbordar o painel de detalhes.");
+    }
+
     private AtendimentoPage abrirNovoAtendimentoNosDetalhes(String cpf) {
         FilaPage fila = entrarNaFilaComUsuarioNovo();
         fila.abrirAtendimento(cpf);
