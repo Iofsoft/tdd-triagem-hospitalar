@@ -360,6 +360,37 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
     @Test
     @Tag("ApiTest")
     @Tag("IntegrationTest")
+    @DisplayName("Should not cancel attendance without justification")
+    void shouldNotCancelAttendanceWithoutJustification() {
+        final String plainTextPassword = "senha123";
+        final User user = registerUser(plainTextPassword);
+        final String token = authenticate(user.getEmail(), plainTextPassword);
+
+        final Atendimento atendimento = EntityBuilder.createAtendimento();
+        repository.salvar(atendimento);
+
+        final CancelarAtendimentoRequest request = new CancelarAtendimentoRequest("");
+
+        given()
+                .contentType("application/json")
+                .port(port)
+                .header("Authorization", "Bearer " + token)
+                .body(request).
+                when()
+                .patch("/api/v1/atendimentos/" + atendimento.getId() + "/cancelamento").
+                then()
+                .log().ifValidationFails(LogDetail.BODY)
+                .statusCode(400);
+
+        final Atendimento atualizado = repository.buscarPorId(atendimento.getId()).orElseThrow();
+
+        assertThat(atualizado.getStatus()).isEqualTo(StatusAtendimento.AGUARDANDO_TRIAGEM);
+        assertThat(atualizado.getMotivoCancelamento()).isNull();
+    }
+
+    @Test
+    @Tag("ApiTest")
+    @Tag("IntegrationTest")
     @DisplayName("Should not open duplicate active attendance")
     void shouldNotOpenDuplicateActiveAttendance() {
         final String plainTextPassword = "senha123";
