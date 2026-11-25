@@ -1,6 +1,7 @@
 package br.ifsp.tdd_triagem_hospitalar.ui.paginas;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 
 public class CadastroPage {
@@ -36,5 +37,10 @@ public class CadastroPage {
 
     public void clicarCriarConta() {
         driver.findElement(By.id("btn-cadastrar")).click();
+    }
+
+    public boolean emailEhValido() {
+        return (Boolean) ((JavascriptExecutor) driver).executeScript(
+                "return document.getElementById('cadastro-email').checkValidity();");
     }
 }

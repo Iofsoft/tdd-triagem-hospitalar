@@ -8,6 +8,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.openqa.selenium.By;
 import com.github.javafaker.Faker;
@@ -15,6 +16,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import java.time.Duration;
 import java.util.UUID;
+import java.nio.file.Path;
 
 @Tag("UiTest")
 class NavegacaoLoginCadastroUiTest{
@@ -56,6 +58,16 @@ class NavegacaoLoginCadastroUiTest{
         String mensagem = cadastro.cadastrarComCamposVazios();
 
         assertEquals("Preencha todos os campos.", mensagem);
+    }
+
+    @Test
+    void deveRecusarEmailInvalidoNoCadastro() {
+        CadastroPage cadastro = new LoginPage(driver).abrirCadastro();
+        cadastro.preencherCadastro("Ana", "Silva", "ana@", "Senha123!");
+        cadastro.clicarCriarConta();
+
+        assertFalse(cadastro.emailEhValido(), "O navegador deve marcar o e-mail incompleto como inválido.");
+        assertTrue(cadastro.estaAberta(), "O formulário deve permanecer aberto após recusar o e-mail.");
     }
 
     @Test
