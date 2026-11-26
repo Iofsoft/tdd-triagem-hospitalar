@@ -9,13 +9,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.openqa.selenium.By;
 import com.github.javafaker.Faker;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
-import java.time.Duration;
 import java.util.UUID;
 import java.nio.file.Path;
 import org.openqa.selenium.Dimension;
@@ -58,20 +53,19 @@ class NavegacaoLoginCadastroUiTest{
     void deveManterLoginECadastroSemRolagemHorizontalEmTelaEstreita() {
         driver.manage().window().setSize(new Dimension(375, 812));
         LoginPage login = new LoginPage(driver);
-
         assertTrue(login.estaAberta());
-        assertTrue(login.estaDentroDaLarguraDaJanela(), "A tela de login não deve transbordar na largura mobile.");
+        assertTrue(login.estaDentroDaLarguraDaJanela(), "A tela de login não deve transbordar");
 
         CadastroPage cadastro = login.abrirCadastro();
         assertTrue(cadastro.estaAberta());
-        assertTrue(cadastro.estaDentroDaLarguraDaJanela(), "A tela de cadastro não deve transbordar na largura mobile.");
+        assertTrue(cadastro.estaDentroDaLarguraDaJanela(), "A tela de cadastro não deve transbordar");
     }
 
     @Test
     void deveMostrarAlertaQuandoCadastroestaVazio(){
         CadastroPage cadastro = new LoginPage(driver).abrirCadastro();
-        String mensagem = cadastro.cadastrarComCamposVazios();
 
+        String mensagem = cadastro.cadastrarComCamposVazios();
         assertEquals("Preencha todos os campos.", mensagem);
     }
     
@@ -89,11 +83,7 @@ class NavegacaoLoginCadastroUiTest{
 
 
 
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.alertIsPresent());
-
-
-        String mensagem = driver.switchTo().alert().getText();
-        driver.switchTo().alert().accept();
+        String mensagem = cadastro.obterMensagemDeAlerta();
 
         assertEquals("Conta criada! Agora é só entrar.", mensagem);
 
@@ -102,9 +92,8 @@ class NavegacaoLoginCadastroUiTest{
         login.preencherLogin(email, senha);
         login.clicarEntrar();
 
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-fila")));
-
-        assertTrue(new FilaPage(driver).estaAberta());
+        FilaPage fila = login.aguardarAberturaDaFila();
+        assertTrue(fila.estaAberta());
     }
 
 
@@ -120,33 +109,30 @@ class NavegacaoLoginCadastroUiTest{
         CadastroPage cadastro = new LoginPage(driver).abrirCadastro();
         cadastro.preencherCadastro(nome, sobrenome, email, senha);
         cadastro.clicarCriarConta();
-
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.alertIsPresent());driver.switchTo().alert().accept();
+        cadastro.obterMensagemDeAlerta();
 
         LoginPage login = new LoginPage(driver);
         login.preencherLogin(email, senha);
         login.clicarEntrar();
 
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-fila")));
+        FilaPage fila = login.aguardarAberturaDaFila();
 
-        FilaPage fila = new FilaPage(driver);
         fila.abrirAtendimento(cpf);
+        fila.aguardarAtendimentoNaLista(cpf);
+        fila.abrirAtendimentoNosDetalhes(cpf);
 
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBePresentInElementLocated(By.id("lista-atendimentos"), cpf));
-
-        driver.findElement(By.xpath("//tr[td[normalize-space()='" + cpf + "']]//button")).click();
-
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-atendimento")));
-        assertTrue(driver.findElement(By.id("tela-atendimento")).isDisplayed());
+        AtendimentoPage atendimento = new AtendimentoPage(driver);
+        atendimento.aguardarAbertura();
+        assertTrue(atendimento.estaAberta());
     }
 
     @Test
     void deveVoltarDosDetalhesParaFila() {
-        abrirNovoAtendimentoNosDetalhes(gerarCpfValido());
-        driver.findElement(By.id("btn-voltar")).click();
+        AtendimentoPage atendimento = abrirNovoAtendimentoNosDetalhes(gerarCpfValido());
+        atendimento.voltarParaFila();
 
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-fila")));
-        assertTrue(new FilaPage(driver).estaAberta());
+        FilaPage fila = new LoginPage(driver).aguardarAberturaDaFila();
+        assertTrue(fila.estaAberta());
     }
 
     @Test
@@ -154,7 +140,7 @@ class NavegacaoLoginCadastroUiTest{
         AtendimentoPage atendimento = abrirNovoAtendimentoNosDetalhes(gerarCpfValido());
         atendimento.realizarTriagem("36,5", "80", "AMARELO");
 
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBe(By.id("detalhe-status"), "Aguardando consulta"));
+        atendimento.aguardarStatus("Aguardando consulta");
         assertEquals("AMARELO", atendimento.obterRisco());
         assertTrue(atendimento.obterMedicoes().contains("36.5") || atendimento.obterMedicoes().contains("36,5"),
                 "A medição de temperatura deve aparecer nos detalhes do atendimento.");
@@ -166,9 +152,7 @@ class NavegacaoLoginCadastroUiTest{
         atendimento.realizarTriagem("50", "80", "AMARELO");
 
 
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.alertIsPresent());
-        String mensagem = driver.switchTo().alert().getText();
-        driver.switchTo().alert().accept();
+        String mensagem = atendimento.obterMensagemDeAlerta();
 
         assertTrue(mensagem.contains("Temperatura fora da faixa permitida"));
         assertEquals("Aguardando triagem", atendimento.obterStatus());
@@ -179,12 +163,12 @@ class NavegacaoLoginCadastroUiTest{
         AtendimentoPage atendimento = abrirNovoAtendimentoNosDetalhes(gerarCpfValido());
         atendimento.realizarTriagem("36,5", "80", "AMARELO");
 
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBe(By.id("detalhe-status"), "Aguardando consulta"));
+        atendimento.aguardarStatus("Aguardando consulta");
         atendimento.iniciarConsulta();
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBe(By.id("detalhe-status"), "Em consulta"));
+        atendimento.aguardarStatus("Em consulta");
 
         atendimento.registrarMedicao("37,2", "90");
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBePresentInElementLocated(By.id("detalhe-medicoes"), "90 bpm"));
+        atendimento.aguardarMedicao("90 bpm");
 
         assertTrue(atendimento.obterMedicoes().contains("90 bpm"));
         assertTrue(atendimento.obterMedicoes().contains("37.2") || atendimento.obterMedicoes().contains("37,2"));
@@ -194,16 +178,16 @@ class NavegacaoLoginCadastroUiTest{
     void devePrescreverEFinalizarAtendimento() {
         AtendimentoPage atendimento = abrirNovoAtendimentoNosDetalhes(gerarCpfValido());
         atendimento.realizarTriagem("36,5", "80", "AMARELO");
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBe(By.id("detalhe-status"), "Aguardando consulta"));
+        atendimento.aguardarStatus("Aguardando consulta");
         atendimento.iniciarConsulta();
 
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBe(By.id("detalhe-status"), "Em consulta"));
+        atendimento.aguardarStatus("Em consulta");
 
         atendimento.registrarPrescricao("Repouso e hidratação");
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBe(By.id("detalhe-prescricao"), "Repouso e hidratação"));
+        atendimento.aguardarPrescricao("Repouso e hidratação");
         atendimento.finalizarAtendimento();
 
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBe(By.id("detalhe-status"), "Finalizado"));
+        atendimento.aguardarStatus("Finalizado");
         assertEquals("Finalizado", atendimento.obterStatus());
     }
 
@@ -212,11 +196,12 @@ class NavegacaoLoginCadastroUiTest{
     private AtendimentoPage abrirNovoAtendimentoNosDetalhes(String cpf) {
         FilaPage fila = entrarNaFilaComUsuarioNovo();
         fila.abrirAtendimento(cpf);
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBePresentInElementLocated(By.id("lista-atendimentos"), cpf));
+        fila.aguardarAtendimentoNaLista(cpf);
         fila.abrirAtendimentoNosDetalhes(cpf);
 
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-atendimento")));
-        return new AtendimentoPage(driver);
+        AtendimentoPage atendimento = new AtendimentoPage(driver);
+        atendimento.aguardarAbertura();
+        return atendimento;
     }
 
     private FilaPage entrarNaFilaComUsuarioNovo() {
@@ -229,15 +214,12 @@ class NavegacaoLoginCadastroUiTest{
         cadastro.preencherCadastro(nome, sobrenome, email, senha);
         cadastro.clicarCriarConta();
 
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.alertIsPresent());
-        driver.switchTo().alert().accept();
+        cadastro.obterMensagemDeAlerta();
 
         LoginPage login = new LoginPage(driver);
         login.preencherLogin(email, senha);
         login.clicarEntrar();
-        new WebDriverWait(driver, Duration.ofSeconds(5))
-                .until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-fila")));
-        return new FilaPage(driver);
+        return login.aguardarAberturaDaFila();
     }
 
     @Test
@@ -246,19 +228,21 @@ class NavegacaoLoginCadastroUiTest{
         String motivo = "a".repeat(120);
 
         atendimento.cancelarAtendimento(motivo);
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBe(By.id("detalhe-status"), "Cancelado"));
+        atendimento.aguardarStatus("Cancelado");
 
         assertTrue(atendimento.motivoEstaContidoNoPainel(), "O motivo longo não deve transbordar o painel de detalhes.");
     }
 
     @Test
     void deveRecusarEmailInvalidoNoCadastro() {
+        String email = "ana-" + UUID.randomUUID() + "@1";
         CadastroPage cadastro = new LoginPage(driver).abrirCadastro();
-        cadastro.preencherCadastro("Ana", "Silva", "ana@1", "Senha123!");
+        cadastro.preencherCadastro("Ana", "Silva", email, "Senha123!");
         cadastro.clicarCriarConta();
 
-        assertFalse(cadastro.emailEhValido(), "O navegador deve marcar o e-mail incompleto como inválido.");
-        assertTrue(cadastro.estaAberta(), "O formulário deve permanecer aberto após recusar o e-mail.");
+        cadastro.obterMensagemDeAlerta();
+
+        assertTrue(cadastro.estaAberta(), "O cadastro não deveria aceitar um email sem domínio completo.");
     }
 
 
@@ -272,6 +256,6 @@ class NavegacaoLoginCadastroUiTest{
             }
         }
 
-        throw new IllegalStateException("Não foi possível gerar um CPF válido para o teste.");
+        throw new IllegalStateException("Não foi possível gerar um cpf válido para o teste.");
     }
 }

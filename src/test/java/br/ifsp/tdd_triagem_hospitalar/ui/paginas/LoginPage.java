@@ -3,6 +3,10 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.Duration;
 
 
 public class LoginPage {
@@ -36,6 +40,12 @@ public class LoginPage {
 
     public void clicarEntrar(){
         driver.findElement(By.id("btn-entrar")).click();
+    }
+
+    public FilaPage aguardarAberturaDaFila() {
+        new WebDriverWait(driver, Duration.ofSeconds(5))
+                .until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-fila")));
+        return new FilaPage(driver);
     }
 
 

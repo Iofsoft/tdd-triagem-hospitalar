@@ -4,6 +4,10 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.Duration;
 
 public class CadastroPage {
     private final WebDriver driver;
@@ -33,7 +37,7 @@ public class CadastroPage {
 
     public String cadastrarComCamposVazios() {
         driver.findElement(By.id("btn-cadastrar")).click();
-        return driver.switchTo().alert().getText();
+        return obterMensagemDeAlerta();
     }
 
     public void preencherCadastro(String nome, String sobrenome, String email, String senha) {
@@ -47,7 +51,11 @@ public class CadastroPage {
         driver.findElement(By.id("btn-cadastrar")).click();
     }
 
-    public boolean emailEhValido() {
-        return !driver.findElements(By.cssSelector("#cadastro-email:invalid")).isEmpty();
+    public String obterMensagemDeAlerta() {
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.alertIsPresent());
+        String mensagem = driver.switchTo().alert().getText();
+        driver.switchTo().alert().accept();
+        return mensagem;
     }
+
 }

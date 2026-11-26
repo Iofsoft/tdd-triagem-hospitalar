@@ -1,8 +1,13 @@
 package br.ifsp.tdd_triagem_hospitalar.ui.paginas;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Rectangle;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.Duration;
 
 public class AtendimentoPage {
     private final WebDriver driver;
@@ -13,6 +18,37 @@ public class AtendimentoPage {
 
     public boolean estaAberta() {
         return driver.findElement(By.id("tela-atendimento")).isDisplayed();
+    }
+
+    public void aguardarAbertura() {
+        new WebDriverWait(driver, Duration.ofSeconds(5))
+                .until(ExpectedConditions.visibilityOfElementLocated(By.id("tela-atendimento")));
+    }
+
+    public void aguardarStatus(String status) {
+        new WebDriverWait(driver, Duration.ofSeconds(5))
+                .until(ExpectedConditions.textToBe(By.id("detalhe-status"), status));
+    }
+
+    public void aguardarMedicao(String medicao) {
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(
+                ExpectedConditions.textToBePresentInElementLocated(By.id("detalhe-medicoes"), medicao));
+    }
+
+    public void aguardarPrescricao(String prescricao) {
+        new WebDriverWait(driver, Duration.ofSeconds(5))
+                .until(ExpectedConditions.textToBe(By.id("detalhe-prescricao"), prescricao));
+    }
+
+    public String obterMensagemDeAlerta() {
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.alertIsPresent());
+        String mensagem = driver.switchTo().alert().getText();
+        driver.switchTo().alert().accept();
+        return mensagem;
+    }
+
+    public void voltarParaFila() {
+        driver.findElement(By.id("btn-voltar")).click();
     }
 
     public void realizarTriagem(String temperatura, String frequencia, String risco) {
@@ -56,9 +92,12 @@ public class AtendimentoPage {
     }
 
     public boolean motivoEstaContidoNoPainel() {
-        return (Boolean) ((JavascriptExecutor) driver).executeScript(
-                "const paragrafo = document.getElementById('detalhe-motivo').parentElement; " +
-                        "return paragrafo.scrollWidth <= paragrafo.clientWidth;");
+        WebElement motivo = driver.findElement(By.id("detalhe-motivo"));
+        WebElement painel = driver.findElement(By.cssSelector("#tela-atendimento > .caixa"));
+        Rectangle limitesMotivo = motivo.getRect();
+        Rectangle limitesPainel = painel.getRect();
+        return limitesMotivo.getX() + limitesMotivo.getWidth()
+                <= limitesPainel.getX() + limitesPainel.getWidth();
     }
 
     public String obterStatus() {
