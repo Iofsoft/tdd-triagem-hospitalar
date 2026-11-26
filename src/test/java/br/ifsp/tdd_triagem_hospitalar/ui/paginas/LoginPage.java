@@ -1,10 +1,8 @@
 package br.ifsp.tdd_triagem_hospitalar.ui.paginas;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
-
-import java.time.Duration;
 
 
 public class LoginPage {
@@ -17,6 +15,13 @@ public class LoginPage {
 
     public boolean estaAberta(){
         return driver.findElement(By.id("tela-login")).isDisplayed();
+    }
+
+    public boolean estaDentroDaLarguraDaJanela() {
+        Dimension tamanhoJanela = driver.manage().window().getSize();
+        Point posicao = driver.findElement(By.id("tela-login")).getLocation();
+        Dimension tamanho = driver.findElement(By.id("tela-login")).getSize();
+        return posicao.getX() + tamanho.getWidth() <= tamanhoJanela.getWidth();
     }
 
     public CadastroPage abrirCadastro(){
