@@ -24,6 +24,7 @@ public class BaseApiIntegrationTest {
     protected JpaUserRepository userRepository;
     @Autowired
     protected PasswordEncoder passwordEncoder;
+    private User usuarioCriado;
 
     @BeforeEach
     protected void generalSetup() {
@@ -33,14 +34,17 @@ public class BaseApiIntegrationTest {
 
     @AfterEach
     protected void tearDown() {
-        userRepository.deleteAll();
+        if (usuarioCriado != null) {
+            userRepository.delete(usuarioCriado);
+            usuarioCriado = null;
+        }
     }
 
     protected User registerUser(String password) {
         User user = EntityBuilder.createUser(
                 passwordEncoder.encode(password)
         );
-
+        usuarioCriado = user;
         return userRepository.save(user);
     }
 

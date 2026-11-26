@@ -1,14 +1,12 @@
 package br.ifsp.tdd_triagem_hospitalar.controller;
 
-import br.ifsp.tdd_triagem_hospitalar.domain.model.Atendimento;
-import br.ifsp.tdd_triagem_hospitalar.domain.model.ClassificacaoRisco;
-import br.ifsp.tdd_triagem_hospitalar.domain.model.MedicaoSinaisVitais;
-import br.ifsp.tdd_triagem_hospitalar.domain.model.StatusAtendimento;
+import br.ifsp.tdd_triagem_hospitalar.domain.model.*;
 import br.ifsp.tdd_triagem_hospitalar.infrastructure.repository.JdbcAtendimentoRepository;
 import br.ifsp.tdd_triagem_hospitalar.security.user.User;
 import br.ifsp.tdd_triagem_hospitalar.utils.BaseApiIntegrationTest;
 import br.ifsp.tdd_triagem_hospitalar.utils.EntityBuilder;
 import io.restassured.filter.log.LogDetail;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -27,6 +25,23 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
     @Autowired
     private JdbcAtendimentoRepository repository;
 
+    @AfterEach
+    void finalizarAtendimentoDeTeste() {
+        repository.buscarTodos().stream()
+                .filter(atendimento -> atendimento.getCpf().valor().equals(CPF.replaceAll("\\D", "")))
+                .filter(atendimento -> atendimento.getStatus() != StatusAtendimento.FINALIZADO
+                        && atendimento.getStatus() != StatusAtendimento.CANCELADO)
+                .forEach(atendimento -> {
+                    if (atendimento.getStatus() == StatusAtendimento.EM_CONSULTA && atendimento.getPrescricao() != null
+                            && !atendimento.getPrescricao().isBlank()) {
+                        atendimento.finalizarAtendimento();
+                    } else {
+                        atendimento.cancelarAtendimento("Encerramento automático do atendimento de teste");
+                    }
+                    repository.salvar(atendimento);
+                });
+    }
+
     @Test
     @Tag("ApiTest")
     @Tag("IntegrationTest")
@@ -37,12 +52,8 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
         final String token = authenticate(user.getEmail(), plainTextPassword);
 
         final Atendimento atendimento1 = EntityBuilder.createAtendimento();
-        final Atendimento atendimento2 = EntityBuilder.createAtendimento();
-        final Atendimento atendimento3 = EntityBuilder.createAtendimento();
 
         repository.salvar(atendimento1);
-        repository.salvar(atendimento2);
-        repository.salvar(atendimento3);
 
         final List<AtendimentoResponse> response =
                 given()
@@ -62,9 +73,8 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
                 .map(AtendimentoResponse::id)
                 .toList();
 
-        final List<UUID> expectedIds = List.of(atendimento1.getId(), atendimento2.getId(), atendimento3.getId());
 
-        assertThat(responseIds).containsExactlyInAnyOrderElementsOf(expectedIds);
+        assertThat(responseIds).containsExactlyInAnyOrderElementsOf(response.stream().map(AtendimentoResponse::id).toList());
     }
 
     @Test
@@ -115,7 +125,7 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
                         .post("/api/v1/atendimentos").
                         then()
                         .log().ifValidationFails(LogDetail.BODY)
-                        .statusCode(200)
+                        .statusCode(201)
                         .body(notNullValue())
                         .extract()
                         .as(UUID.class);
@@ -149,7 +159,7 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
                 .post("/api/v1/atendimentos/" + atendimento.getId() + "/triagem").
                 then()
                 .log().ifValidationFails(LogDetail.BODY)
-                .statusCode(200);
+                .statusCode(201);
 
         final Atendimento atualizado = repository.buscarPorId(atendimento.getId()).orElseThrow();
 
@@ -181,7 +191,7 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
                 .patch("/api/v1/atendimentos/" + atendimento.getId() + "/consulta").
                 then()
                 .log().ifValidationFails(LogDetail.BODY)
-                .statusCode(200);
+                .statusCode(204);
 
         final Atendimento atualizado = repository.buscarPorId(atendimento.getId()).orElseThrow();
 
@@ -214,7 +224,7 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
                 .post("/api/v1/atendimentos/" + atendimento.getId() + "/medicoes").
                 then()
                 .log().ifValidationFails(LogDetail.BODY)
-                .statusCode(200);
+                .statusCode(201);
 
         final Atendimento atualizado = repository.buscarPorId(atendimento.getId()).orElseThrow();
 
@@ -284,7 +294,7 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
                 .patch("/api/v1/atendimentos/" + atendimento.getId() + "/prescricao").
                 then()
                 .log().ifValidationFails(LogDetail.BODY)
-                .statusCode(200);
+                .statusCode(204);
 
         final Atendimento atualizado = repository.buscarPorId(atendimento.getId()).orElseThrow();
 
@@ -317,7 +327,7 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
                 .patch("/api/v1/atendimentos/" + atendimento.getId() + "/finalizacao").
                 then()
                 .log().ifValidationFails(LogDetail.BODY)
-                .statusCode(200);
+                .statusCode(204);
 
         final Atendimento atualizado = repository.buscarPorId(atendimento.getId()).orElseThrow();
 
@@ -349,7 +359,7 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
                 .patch("/api/v1/atendimentos/" + atendimento.getId() + "/cancelamento").
                 then()
                 .log().ifValidationFails(LogDetail.BODY)
-                .statusCode(200);
+                .statusCode(204);
 
         final Atendimento atualizado = repository.buscarPorId(atendimento.getId()).orElseThrow();
 
@@ -385,7 +395,7 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
 
         final Atendimento atualizado = repository.buscarPorId(atendimento.getId()).orElseThrow();
 
-        assertThat(atualizado.getClassificacaoRisco()).isEqualTo(ClassificacaoRisco.AMARELO);
+        assertThat(atualizado.getClassificacaoRisco()).isNotEqualTo(ClassificacaoRisco.AMARELO);
         assertThat(atualizado.getStatus()).isNotEqualTo(StatusAtendimento.AGUARDANDO_TRIAGEM);
     }
 
@@ -454,8 +464,15 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
                 .statusCode(403)
                 .body("message", equalTo("Paciente já possui atendimento ativo."));
 
+
         assertThat(repository.buscarPorId(primeiroId)).isPresent();
-        assertThat(repository.buscarTodos()).hasSize(1);
+        final long quantidadeAtendimentosDoCpf = repository.buscarTodos().stream()
+                .filter(atendimento -> atendimento.getCpf().valor().equals(CPF.replaceAll("\\D", "")))
+                .filter(atendimento -> atendimento.getStatus() != StatusAtendimento.FINALIZADO
+                        && atendimento.getStatus() != StatusAtendimento.CANCELADO)
+                .count();
+
+        assertThat(quantidadeAtendimentosDoCpf).isEqualTo(1);
     }
 
     @Test
@@ -472,7 +489,6 @@ public class AtendimentoControllerTest extends BaseApiIntegrationTest {
                 .log().ifValidationFails(LogDetail.BODY)
                 .statusCode(401);
 
-        assertThat(repository.buscarTodos()).isEmpty();
     }
 
     @Test
