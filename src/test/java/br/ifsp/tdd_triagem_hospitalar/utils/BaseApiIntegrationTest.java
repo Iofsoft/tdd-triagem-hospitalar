@@ -10,7 +10,6 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.client.RestTemplate;
 
@@ -24,8 +23,6 @@ public class BaseApiIntegrationTest {
     @Autowired
     protected JpaUserRepository userRepository;
     @Autowired
-    protected JdbcTemplate jdbcTemplate;
-    @Autowired
     protected PasswordEncoder passwordEncoder;
 
     @BeforeEach
@@ -36,8 +33,6 @@ public class BaseApiIntegrationTest {
 
     @AfterEach
     protected void tearDown() {
-        jdbcTemplate.update("DELETE FROM medicao");
-        jdbcTemplate.update("DELETE FROM atendimento");
         userRepository.deleteAll();
     }
 
