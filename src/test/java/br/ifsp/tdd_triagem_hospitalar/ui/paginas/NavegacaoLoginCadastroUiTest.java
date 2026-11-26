@@ -1,5 +1,6 @@
 package br.ifsp.tdd_triagem_hospitalar.ui.paginas;
 
+import br.ifsp.tdd_triagem_hospitalar.domain.model.Cpf;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -17,6 +18,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.time.Duration;
 import java.util.UUID;
 import java.nio.file.Path;
+import org.openqa.selenium.Dimension;
 
 @Tag("UiTest")
 class NavegacaoLoginCadastroUiTest{
@@ -53,22 +55,26 @@ class NavegacaoLoginCadastroUiTest{
     }
 
     @Test
+    void deveManterLoginECadastroSemRolagemHorizontalEmTelaEstreita() {
+        driver.manage().window().setSize(new Dimension(375, 812));
+        LoginPage login = new LoginPage(driver);
+
+        assertTrue(login.estaAberta());
+        assertTrue(login.estaDentroDaLarguraDaJanela(), "A tela de login não deve transbordar na largura mobile.");
+
+        CadastroPage cadastro = login.abrirCadastro();
+        assertTrue(cadastro.estaAberta());
+        assertTrue(cadastro.estaDentroDaLarguraDaJanela(), "A tela de cadastro não deve transbordar na largura mobile.");
+    }
+
+    @Test
     void deveMostrarAlertaQuandoCadastroestaVazio(){
         CadastroPage cadastro = new LoginPage(driver).abrirCadastro();
         String mensagem = cadastro.cadastrarComCamposVazios();
 
         assertEquals("Preencha todos os campos.", mensagem);
     }
-
-    @Test
-    void deveRecusarEmailInvalidoNoCadastro() {
-        CadastroPage cadastro = new LoginPage(driver).abrirCadastro();
-        cadastro.preencherCadastro("Ana", "Silva", "ana@", "Senha123!");
-        cadastro.clicarCriarConta();
-
-        assertFalse(cadastro.emailEhValido(), "O navegador deve marcar o e-mail incompleto como inválido.");
-        assertTrue(cadastro.estaAberta(), "O formulário deve permanecer aberto após recusar o e-mail.");
-    }
+    
 
     @Test
     void deveCadastrarUsuarioComDadosValidos() {
@@ -109,7 +115,7 @@ class NavegacaoLoginCadastroUiTest{
         String sobrenome = faker.name().lastName();
         String email = "ui-" + UUID.randomUUID() + "@example.com";
         String senha = faker.internet().password(10, 16);
-        String cpf = "11144477735";
+        String cpf = gerarCpfValido();;
 
         CadastroPage cadastro = new LoginPage(driver).abrirCadastro();
         cadastro.preencherCadastro(nome, sobrenome, email, senha);
@@ -201,16 +207,7 @@ class NavegacaoLoginCadastroUiTest{
         assertEquals("Finalizado", atendimento.obterStatus());
     }
 
-    @Test
-    void deveManterMotivoLongoDentroDoPainel() {
-        AtendimentoPage atendimento = abrirNovoAtendimentoNosDetalhes(gerarCpfValido());
-        String motivo = "a".repeat(120);
 
-        atendimento.cancelarAtendimento(motivo);
-        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBe(By.id("detalhe-status"), "Cancelado"));
-
-        assertTrue(atendimento.motivoEstaContidoNoPainel(), "O motivo longo não deve transbordar o painel de detalhes.");
-    }
 
     private AtendimentoPage abrirNovoAtendimentoNosDetalhes(String cpf) {
         FilaPage fila = entrarNaFilaComUsuarioNovo();
@@ -243,19 +240,38 @@ class NavegacaoLoginCadastroUiTest{
         return new FilaPage(driver);
     }
 
-    private String gerarCpfValido() {
-        String base = faker.number().digits(9);
-        int digito1 = calcularDigitoCpf(base, 10);
-        int digito2 = calcularDigitoCpf(base + digito1, 11);
-        return base + digito1 + digito2;
+    @Test
+    void deveManterMotivoLongoDentroDoPainel() {
+        AtendimentoPage atendimento = abrirNovoAtendimentoNosDetalhes(gerarCpfValido());
+        String motivo = "a".repeat(120);
+
+        atendimento.cancelarAtendimento(motivo);
+        new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.textToBe(By.id("detalhe-status"), "Cancelado"));
+
+        assertTrue(atendimento.motivoEstaContidoNoPainel(), "O motivo longo não deve transbordar o painel de detalhes.");
     }
 
-    private int calcularDigitoCpf(String cpfParcial, int pesoInicial) {
-        int soma = 0;
-        for (int i = 0; i < cpfParcial.length(); i++) {
-            soma += Character.getNumericValue(cpfParcial.charAt(i)) * (pesoInicial - i);
+    @Test
+    void deveRecusarEmailInvalidoNoCadastro() {
+        CadastroPage cadastro = new LoginPage(driver).abrirCadastro();
+        cadastro.preencherCadastro("Ana", "Silva", "ana@1", "Senha123!");
+        cadastro.clicarCriarConta();
+
+        assertFalse(cadastro.emailEhValido(), "O navegador deve marcar o e-mail incompleto como inválido.");
+        assertTrue(cadastro.estaAberta(), "O formulário deve permanecer aberto após recusar o e-mail.");
+    }
+
+
+
+    private String gerarCpfValido() { // testar se funciona no resto
+        for (int tentativa = 0; tentativa < 1000; tentativa++) {
+            String cpf = faker.number().digits(11);
+            try {
+                return new Cpf(cpf).valor();
+            } catch (IllegalArgumentException ignorado) {
+            }
         }
-        int resto = (soma * 10) % 11;
-        return resto == 10 ? 0 : resto;
+
+        throw new IllegalStateException("Não foi possível gerar um CPF válido para o teste.");
     }
 }

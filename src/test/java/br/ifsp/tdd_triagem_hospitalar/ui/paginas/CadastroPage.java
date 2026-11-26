@@ -1,7 +1,8 @@
 package br.ifsp.tdd_triagem_hospitalar.ui.paginas;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 
 public class CadastroPage {
@@ -15,6 +16,13 @@ public class CadastroPage {
 
     public boolean estaAberta() {
         return driver.findElement(By.id("tela-cadastro")).isDisplayed();
+    }
+
+    public boolean estaDentroDaLarguraDaJanela() {
+        Dimension tamanhoJanela = driver.manage().window().getSize();
+        Point posicao = driver.findElement(By.id("tela-cadastro")).getLocation();
+        Dimension tamanho = driver.findElement(By.id("tela-cadastro")).getSize();
+        return posicao.getX() + tamanho.getWidth() <= tamanhoJanela.getWidth();
     }
 
     public LoginPage voltarAoLogin() {
@@ -40,7 +48,6 @@ public class CadastroPage {
     }
 
     public boolean emailEhValido() {
-        return (Boolean) ((JavascriptExecutor) driver).executeScript(
-                "return document.getElementById('cadastro-email').checkValidity();");
+        return !driver.findElements(By.cssSelector("#cadastro-email:invalid")).isEmpty();
     }
 }
