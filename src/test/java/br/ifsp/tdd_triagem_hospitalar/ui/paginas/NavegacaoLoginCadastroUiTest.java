@@ -24,7 +24,6 @@ class NavegacaoLoginCadastroUiTest{
     @BeforeEach
     void iniciarNavegador(){
         ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless=new");
         driver = new ChromeDriver(options);
         Path pagina = Path.of("frontend", "index.html").toAbsolutePath();
         driver.get(pagina.toUri().toString());
@@ -104,7 +103,7 @@ class NavegacaoLoginCadastroUiTest{
         String sobrenome = faker.name().lastName();
         String email = "ui-" + UUID.randomUUID() + "@example.com";
         String senha = faker.internet().password(10, 16);
-        String cpf = gerarCpfValido();;
+        String cpf = gerarCpfValido();
 
         CadastroPage cadastro = new LoginPage(driver).abrirCadastro();
         cadastro.preencherCadastro(nome, sobrenome, email, senha);
@@ -239,7 +238,6 @@ class NavegacaoLoginCadastroUiTest{
         CadastroPage cadastro = new LoginPage(driver).abrirCadastro();
         cadastro.preencherCadastro("Ana", "Silva", email, "Senha123!");
         cadastro.clicarCriarConta();
-
         cadastro.obterMensagemDeAlerta();
 
         assertTrue(cadastro.estaAberta(), "O cadastro não deveria aceitar um email sem domínio completo.");
@@ -247,7 +245,7 @@ class NavegacaoLoginCadastroUiTest{
 
 
 
-    private String gerarCpfValido() { // testar se funciona no resto
+    private String gerarCpfValido() { // testar isso ??
         for (int tentativa = 0; tentativa < 1000; tentativa++) {
             String cpf = faker.number().digits(11);
             try {

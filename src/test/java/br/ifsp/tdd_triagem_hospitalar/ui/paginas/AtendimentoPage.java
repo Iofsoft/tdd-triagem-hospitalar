@@ -77,9 +77,7 @@ public class AtendimentoPage {
         driver.findElement(By.id("btn-finalizar")).click();
     }
 
-    public String obterPrescricao() {
-        return driver.findElement(By.id("detalhe-prescricao")).getText();
-    }
+
 
 
     public void cancelarAtendimento(String motivo) {
@@ -87,9 +85,7 @@ public class AtendimentoPage {
         driver.findElement(By.id("btn-cancelar")).click();
     }
 
-    public String obterMotivoCancelamento() {
-        return driver.findElement(By.id("detalhe-motivo")).getText();
-    }
+
 
     public boolean motivoEstaContidoNoPainel() {
         WebElement motivo = driver.findElement(By.id("detalhe-motivo"));

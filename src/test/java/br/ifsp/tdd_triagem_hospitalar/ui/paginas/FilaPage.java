@@ -46,7 +46,5 @@ public class FilaPage {
         throw new IllegalArgumentException("Atendimento não encontrado na fila: " + cpf);
     }
 
-    public String obterTextoDaFila(){
-        return driver.findElement(By.id("lista-atendimentos")).getText();
-    }
+
 }
